@@ -75,8 +75,8 @@ Cloudflare Workers Builds settings:
 - Deploy command: `npx wrangler deploy`
 - Non-production branch deploy command: `npx wrangler versions upload`
 - Path: `/`
-- Production domain: `shop.niomatic.com`
-- OAuth callback URL: `https://shop.niomatic.com/callback/`
+- Production domain: `watchino.myselldone.com`
+- OAuth callback URL: `https://watchino.myselldone.com/callback/`
 
 `wrangler.toml` deploys `dist/` with Workers Static Assets. `/dashboard/` and `/callback/` are real directory index pages, and unknown client routes fall back to the SPA shell.
 
@@ -92,7 +92,7 @@ Cloudflare Workers Builds settings:
 Use Cloudflare Workers Builds connected to this GitHub repository. The Cloudflare build form should use:
 
 ```text
-Project name: selldone-shop-a1
+Project name: watchino
 Build command: npm run build:static
 Deploy command: npx wrangler deploy
 Non-production branch deploy command: npx wrangler versions upload

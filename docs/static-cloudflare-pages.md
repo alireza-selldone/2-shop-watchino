@@ -4,13 +4,17 @@ This package deploys as static assets on Cloudflare Workers. No Node server or t
 
 Cloudflare Workers Builds settings:
 
-- Project name: `selldone-shop-a1`
+- Project name: `watchino`
 - Build command: `npm run build:static`
 - Deploy command: `npx wrangler deploy`
 - Non-production branch deploy command: `npx wrangler versions upload`
 - Path: `/`
-- Production domain: `shop.niomatic.com`
-- OAuth callback URL: `https://shop.niomatic.com/callback/`
+- Production domain: `watchino.myselldone.com`
+- OAuth callback URL: `https://watchino.myselldone.com/callback/`
+
+> The worker name must match `name` in `wrangler.toml`. It was `selldone-shop-a1`,
+> which is a different, live project on a production domain; deploying under that
+> name from this repository would have overwritten it.
 
 ## Runtime config
 

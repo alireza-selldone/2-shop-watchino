@@ -1,0 +1,230 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>All references — Watchino</title>
+    <meta
+      name="description"
+      content="Browse all 35 Watchino references by collection, price, availability and brand. Men's classic, women's collection, heritage &amp; leather, sport &amp; chronograph, diamond &amp; gold, and haute horlogerie timepieces."
+    />
+    <meta name="shop-name" content="Watchino" />
+    <meta name="pajulina-app-name" content="Selldone Shop A1" />
+    <meta name="pajulina-client-id" content="019ff544-c6a2-73fa-b47c-75e4254fda53" />
+    <meta name="pajulina-shop-id" content="8460" />
+    <meta name="pajulina-shop-name" content="Watchino" />
+    <meta name="pajulina-shop-domain" content="watchino.myselldone.com" />
+    <meta name="pajulina-storefront-shop-handle" content="Watchino" />
+    <meta name="pajulina-dashboard-path" content="/dashboard/" />
+    <meta name="pajulina-callback-path" content="/callback/" />
+    <meta name="pajulina-selldone-base" content="https://selldone.com" />
+    <meta name="pajulina-api-base" content="https://api.selldone.com" />
+    <meta name="pajulina-xapi-base" content="https://xapi.selldone.com" />
+    <meta name="pajulina-auth-prompt" content="consent" />
+    <meta name="shop-prefix-address" content="" />
+    <meta name="custom-home" content="shop" />
+    <meta content="https://selldone.com" name="service-url" />
+    <meta content="https://xapi.selldone.com" name="selldone-xapi" />
+    <meta content="https://cdn.selldone.com/app" name="selldone-cdn-images" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link rel="preconnect" href="https://cdn.selldone.com" />
+    <link href="https://fonts.googleapis.com/css2?family=Bodoni+Moda:opsz,wght@6..96,400;6..96,500&family=Archivo:wght@400;500;600&family=Azeret+Mono:wght@400;500&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="styles.css" />
+    <script type="module" src="app.js"></script>
+    <script type="module" src="shop.js"></script>
+  </head>
+  <body>
+
+    <a class="skip" href="#main">Skip to content</a>
+
+    <!-- Signature: chapter-ring index rail, doubles as scroll position -->
+    <aside class="rail" aria-hidden="true">
+      <span class="rail__label">WATCHINO</span>
+      <div class="rail__ticks"><span class="rail__marker"></span></div>
+      <span class="rail__label">EST. 1946</span>
+    </aside>
+
+    <div class="page">
+
+      <header class="hdr">
+        <div class="topbar">
+          <span class="topbar__long">Insured worldwide delivery · Every reference authenticated in-house</span>
+          <span class="topbar__short">Insured delivery · Authenticated in-house</span>
+        </div>
+        <div class="wrap hdr__in">
+          <div class="hdr__nav">
+            <nav class="nav" aria-label="Main">
+              <a href="shop.html">Collections</a>
+              <a href="shop.html?cat=haute-horlogerie">Haute Horlogerie</a>
+              <a href="index.html#service">Client Care</a>
+            </nav>
+            <div class="mega"><div class="mega__grid" id="megagrid"></div></div>
+          </div>
+          <button class="burger mobonly" data-open="nav" aria-label="Open menu"><span></span></button>
+          <a class="logo" href="index.html">Watch<span>i</span>no</a>
+          <div class="hdr__act">
+            <button class="iconbtn" aria-label="Search">
+              <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="M16.5 16.5 21 21"/></svg>
+            </button>
+            <button class="iconbtn" aria-label="Account">
+              <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="8" r="4"/><path d="M4 21c0-4 3.6-6 8-6s8 2 8 6"/></svg>
+            </button>
+            <button class="iconbtn" data-open="cart" aria-label="Open bag, 0 items">
+              <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 8h12l-1 12H7L6 8Z"/><path d="M9 8V6a3 3 0 0 1 6 0v2"/></svg>
+              <span class="cartdot" data-cart-count hidden>0</span>
+            </button>
+          </div>
+        </div>
+      </header>
+
+      <main id="main" tabindex="-1" class="section" style="padding-top:44px">
+        <div class="wrap">
+          <p class="crumb"><a href="index.html">Home</a> &nbsp;/&nbsp; Collections</p>
+
+          <div class="shop">
+
+            <form class="filters" id="filters" aria-label="Refine the collection" onsubmit="return false">
+              <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
+                <span class="eyebrow mb0">Refine</span>
+                <button type="button" class="xbtn mobonly" data-close>Done</button>
+              </div>
+
+              <div class="fgroup">
+                <h4 id="fg-collection">Collection</h4>
+                <div id="catfilters" role="group" aria-labelledby="fg-collection"></div>
+              </div>
+
+              <div class="fgroup">
+                <h4 id="fg-price">Price</h4>
+                <p class="rangeout" id="pout" role="status">&nbsp;</p>
+                <!-- Logarithmic track: 29 of 35 references sit under $19,000
+                     against a $153,889 ceiling, so a linear slider buries them
+                     in the first eighth. -->
+                <label class="sr" for="plo">Minimum price</label>
+                <input class="range" id="plo" type="range" min="0" max="100" value="0" aria-describedby="pout">
+                <label class="sr" for="phi">Maximum price</label>
+                <input class="range" id="phi" type="range" min="0" max="100" value="100" aria-describedby="pout">
+                <p class="cap mb0" style="margin-top:10px">Logarithmic scale</p>
+              </div>
+
+              <div class="fgroup">
+                <h4>Availability</h4>
+                <label class="check"><input type="checkbox" id="instock"> In stock only</label>
+              </div>
+
+              <div class="fgroup">
+                <h4 id="fg-brand">Brand</h4>
+                <div id="brandfilters" role="group" aria-labelledby="fg-brand"></div>
+              </div>
+
+              <div class="fgroup" style="border-bottom:0">
+                <button type="button" class="btn btn--line" id="clear" style="width:100%">Clear all</button>
+              </div>
+            </form>
+
+            <div>
+              <div class="listhd">
+                <div>
+                  <h1 class="h1" id="listtitle">All references</h1>
+                  <p class="lede" id="listintro" style="margin:8px 0 4px">&nbsp;</p>
+                  <p class="cap mb0" id="count" role="status">&nbsp;</p>
+                </div>
+                <div>
+                  <label class="sr" for="sort">Sort by</label>
+                  <select class="sort" id="sort">
+                    <option value="new">Newest</option>
+                    <option value="low">Price, low to high</option>
+                    <option value="high">Price, high to low</option>
+                  </select>
+                </div>
+              </div>
+              <p class="cap" data-catalog-error hidden style="margin-bottom:16px;color:var(--alert)"></p>
+              <div class="pgrid" id="pgrid"></div>
+            </div>
+
+          </div>
+        </div>
+      </main>
+
+      <footer class="ft ink">
+        <div class="wrap">
+          <div class="ft__cols">
+            <div class="ft__col">
+              <p class="logo" style="text-align:left;margin-bottom:18px">Watch<span>i</span>no</p>
+              <p class="lede" style="font-size:14px">Fine watches, sold by people who repair them. Zürich and London.</p>
+              <p class="demonote" style="margin-top:18px">Demonstration storefront. No order is ever placed.</p>
+            </div>
+            <div class="ft__col">
+              <h4>Collections</h4>
+              <ul data-collections></ul>
+            </div>
+            <div class="ft__col">
+              <h4>Client care</h4>
+              <ul>
+                <li><a href="#">Shipping</a></li>
+                <li><a href="#">Returns</a></li>
+                <li><a href="#">Warranty</a></li>
+                <li><a href="#">Authentication</a></li>
+                <li><a href="#">Book a servicing</a></li>
+              </ul>
+            </div>
+            <div class="ft__col ft__col--sub">
+              <h4>New references</h4>
+              <p class="lede" style="font-size:14px;color:var(--whisper)">We write when something arrives. Roughly once a month.</p>
+              <div class="sub">
+                <label class="sr" for="nl">Email address</label>
+                <input id="nl" type="email" placeholder="you@example.com" />
+                <button type="button">Subscribe</button>
+              </div>
+            </div>
+          </div>
+          <div class="ft__bar">
+            <span>© 2026 Watchino</span>
+            <span>Visa · Mastercard · Amex · Bank transfer</span>
+          </div>
+        </div>
+      </footer>
+
+    </div><!-- /.page -->
+
+    <button class="fbar mobonly" data-open="filters">Filter &amp; sort</button>
+
+    <!-- Mobile navigation -->
+    <div class="drawer ink" role="dialog" aria-modal="true" aria-label="Menu" aria-hidden="true">
+      <div class="drawer__top">
+        <span class="rail__label" style="writing-mode:horizontal-tb">MENU</span>
+        <button class="xbtn" data-close>Close</button>
+      </div>
+      <nav data-drawer-nav aria-label="Mobile"></nav>
+    </div>
+
+    <!-- Bag -->
+    <aside class="cart" role="dialog" aria-modal="true" aria-label="Shopping bag" aria-hidden="true">
+      <div class="cart__hd">
+        <span class="eyebrow mb0" data-cart-label>Your bag · 0</span>
+        <button class="xbtn" data-close>Close</button>
+      </div>
+      <div class="cart__body" data-cart-body></div>
+      <div class="cart__ft" data-cart-foot hidden>
+        <div class="sum__tot" style="border:0;padding:0;margin:0 0 18px">
+          <span class="eyebrow mb0">Subtotal</span>
+          <span class="price" style="font-family:var(--display);font-size:24px" data-cart-total>$0</span>
+        </div>
+        <a class="btn btn--full" href="checkout.html">Checkout</a>
+        <p class="cap center" style="margin-top:12px">Demonstration only — no order is placed.</p>
+      </div>
+    </aside>
+
+    <!-- Gallery lightbox (used from step 5) -->
+    <div class="lbox" role="dialog" aria-modal="true" aria-label="Enlarged image" aria-hidden="true">
+      <button class="lbox__x" data-close-lightbox>Close</button>
+      <figure class="lbox__fig">
+        <img alt="" hidden />
+        <figcaption class="lbox__cap"></figcaption>
+      </figure>
+    </div>
+
+    <div class="scrim"></div>
+  </body>
+</html>

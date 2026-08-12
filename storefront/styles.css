@@ -68,7 +68,12 @@ body{
   font-family:var(--body);font-size:16px;line-height:1.6;
   font-weight:400;-webkit-font-smoothing:antialiased;
 }
-img{max-width:100%;display:block;}
+/* Every <img> carries width/height attributes to reserve layout space. Those
+   attributes are presentational hints for the CSS width/height properties, so
+   without height:auto a rule that only sets width:auto leaves the height hint
+   in force and the image renders stretched, then gets clipped. Components that
+   want an explicit height still win on specificity. */
+img{max-width:100%;display:block;height:auto;}
 a{color:inherit;text-decoration:none;}
 button{font:inherit;color:inherit;background:none;border:0;cursor:pointer;}
 input,select{font:inherit;color:inherit;}
@@ -160,6 +165,9 @@ h1,h2,h3{margin:0;font-weight:400;}
 }
 @media (max-width:1023px){ .rail{display:none;} }
 .page{margin-left:var(--rail);}
+/* The rail is a hard vertical edge. --pad alone left content sitting right up
+   against it, so add a dedicated gutter wherever the rail is showing. */
+@media (min-width:1024px){ .page{padding-left:32px;} }
 
 /* ---------- Header ---------- */
 .topbar{
@@ -327,9 +335,11 @@ html.is-locked,html.is-locked body{overflow:hidden;height:100%;}
   background:var(--graphite);color:var(--dial);position:relative;overflow:hidden;
   min-height:min(92vh,860px);display:flex;align-items:center;
 }
+/* .wrap supplies the horizontal padding; a `padding: 80px 0` shorthand here
+   reset it to zero and pushed hero content flush against the rail. */
 .hero__grid{
   display:grid;grid-template-columns:1fr 1fr;gap:56px;align-items:center;
-  width:100%;padding:80px 0;
+  width:100%;padding-block:80px;
 }
 .hero__art{position:relative;display:grid;place-items:center;}
 .hero__art::before{
@@ -352,7 +362,7 @@ html.is-locked,html.is-locked body{overflow:hidden;height:100%;}
 
 @media (max-width:900px){
   .hero{min-height:auto;}
-  .hero__grid{grid-template-columns:1fr;gap:36px;padding:56px 0 64px;text-align:center;}
+  .hero__grid{grid-template-columns:1fr;gap:36px;padding-block:56px 64px;text-align:center;}
   .hero__art{order:-1;}
   .hero__art img{max-height:46vh;}
   /* Stacked, .hero__art spans the full width, so a halo at 118% of it balloons
@@ -390,8 +400,13 @@ html.is-locked,html.is-locked body{overflow:hidden;height:100%;}
 
 /* ---------- Tier rows ---------- */
 .tier{display:grid;grid-template-columns:1fr 1fr;align-items:center;gap:0;border-bottom:1px solid var(--rule);}
-.tier__art{aspect-ratio:4/3;background:var(--dial-pure);display:grid;place-items:center;overflow:hidden;}
-.tier__art img{max-height:78%;width:auto;object-fit:contain;transition:transform var(--slow) var(--ease);}
+/* max-height:78% did not resolve against an aspect-ratio-derived height, so the
+   image filled the box and overflowed. Inset the container instead and let
+   object-fit:contain do the fitting — same visual proportion, no clipping. */
+.tier__art{aspect-ratio:4/3;background:var(--dial-pure);position:relative;overflow:hidden;}
+/* Absolutely positioned: percentage width/height resolve against the containing
+   block, which in-flow percentages cannot do against an aspect-ratio height. */
+.tier__art img{position:absolute;left:11%;top:11%;width:78%;height:78%;object-fit:contain;transition:transform var(--slow) var(--ease);}
 .tier:hover .tier__art img{transform:scale(1.03);}
 .tier__txt{padding:clamp(32px,5vw,72px);}
 .tier--flip .tier__art{order:2;}
@@ -429,8 +444,15 @@ html.is-locked,html.is-locked body{overflow:hidden;height:100%;}
 /* ---------- Product card ---------- */
 .pgrid{display:grid;grid-template-columns:repeat(3,1fr);gap:1px;background:var(--rule);border:1px solid var(--rule);}
 .pcard{background:var(--dial-pure);padding:28px;display:block;}
-.pcard__art{aspect-ratio:1;display:grid;place-items:center;overflow:hidden;margin-bottom:22px;}
-.pcard__art img{max-height:100%;width:auto;object-fit:contain;transition:transform var(--slow) var(--ease);}
+/* Two compounding bugs. The <img> width/height attributes are presentational
+   hints, so a rule setting only width:auto left the height hint (500px) live and
+   the image rendered 264x500 in a 264x264 box, clipped by overflow:hidden. And
+   percentage heights do not resolve against a height derived from aspect-ratio,
+   so height:100% silently fell back to auto. Stretching the grid item sizes it
+   from the grid area with no percentage involved; object-fit:contain then fits
+   the whole watch inside, and the container padding gives it breathing room. */
+.pcard__art{aspect-ratio:1;position:relative;overflow:hidden;margin-bottom:22px;}
+.pcard__art img{position:absolute;left:8%;top:8%;width:84%;height:84%;object-fit:contain;transition:transform var(--slow) var(--ease);}
 .pcard:hover .pcard__art img{transform:scale(1.03);}
 .pcard__name{
   font-family:var(--display);font-size:19px;margin:6px 0 10px;
@@ -518,11 +540,11 @@ html.is-locked,html.is-locked body{overflow:hidden;height:100%;}
 .gal{display:grid;grid-template-columns:76px 1fr;gap:16px;min-width:0;}
 .gal>*{min-width:0;}
 .thumbs{display:flex;flex-direction:column;gap:10px;}
-.thumb{aspect-ratio:1;background:var(--dial-pure);border:1px solid var(--rule);display:grid;place-items:center;padding:8px;}
+.thumb{aspect-ratio:1;background:var(--dial-pure);border:1px solid var(--rule);position:relative;}
 .thumb.is-on{border-color:var(--blued);}
-.thumb img{max-height:100%;width:auto;object-fit:contain;}
-.galmain{aspect-ratio:1;background:var(--dial-pure);display:grid;place-items:center;padding:6%;border:1px solid var(--rule);}
-.galmain img{max-height:100%;width:auto;object-fit:contain;}
+.thumb img{position:absolute;inset:8px;width:calc(100% - 16px);height:calc(100% - 16px);object-fit:contain;}
+.galmain{aspect-ratio:1;background:var(--dial-pure);position:relative;border:1px solid var(--rule);}
+.galmain img{position:absolute;left:6%;top:6%;width:88%;height:88%;object-fit:contain;}
 .pinfo{position:sticky;top:120px;}
 .pinfo h1{margin:8px 0 10px;}
 .pline{height:1px;background:var(--rule);margin:26px 0;}
@@ -606,6 +628,29 @@ html.is-locked,html.is-locked body{overflow:hidden;height:100%;}
   .steps{overflow-x:auto;}
   .step em{display:none;}
   .step.is-now em{display:block;}
+}
+
+/* ---------- Fixed-box image containment ----------
+   Every image that sits inside a fixed box gets the same contract: never exceed
+   the box, never distort, always letterbox. This exists because the same bug
+   surfaced three separate times — product cards, tier art, and the product
+   gallery — each time because an HTML width/height attribute or an unresolvable
+   percentage silently won over the intended sizing. Boxes whose height comes
+   from aspect-ratio position the image absolutely, since percentage heights do
+   not resolve against an aspect-ratio height. Verified by imgsweep.mjs. */
+.pcard__art img,
+.galmain img,
+.thumb img,
+.cat img,
+.mega__item img,
+.cart__row img,
+.sum__row img,
+.tier__art img,
+.spot__art img,
+.edit__art img,
+.hero__art img{
+  object-fit:contain;
+  max-width:100%;
 }
 
 /* ---------- Utility ---------- */

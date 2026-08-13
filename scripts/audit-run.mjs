@@ -11,10 +11,35 @@ const WIDTHS=[1440,1024,1000,950,900,860,850,820,800,768,390];
 const BAG=JSON.stringify([{id:709403,qty:1},{id:325648,qty:2}]);
 const b=await chromium.launch();
 let allPass=true; const rows=[];
+
+/* Each BrowserContext starts with an empty HTTP cache, so every third-party
+   response was refetched for all eleven widths and the run crawled — over an
+   hour. Two offenders: the four Google Font families, and the catalogue, since
+   each of the 88 page loads calls XAPI twice and Selldone throttles ~176
+   requests in a few minutes. Both are replayed from an in-process cache.
+
+   Caching the catalogue also makes the matrix deterministic: the first request
+   is real, and every width afterwards measures layout against identical data
+   rather than against whatever the shop returned that minute. */
+const fontCache=new Map();
+async function cacheThirdParty(ctx){
+  await ctx.route(/fonts\.(googleapis|gstatic)\.com|xapi\.selldone\.com/,async(route)=>{
+    const url=route.request().url();
+    if(!fontCache.has(url)){
+      const res=await route.fetch();
+      const headers={...res.headers()};
+      // body() is already decoded; leaving these would describe it wrongly.
+      delete headers["content-encoding"]; delete headers["content-length"];
+      fontCache.set(url,{status:res.status(),headers,body:await res.body()});
+    }
+    await route.fulfill(fontCache.get(url));
+  });
+}
+
 for(const w of WIDTHS){
-  // one context per width: pages share the HTTP cache, so Google Fonts is
-  // fetched once instead of once per page (a 44-load burst gets throttled)
+  // one context per width, so no scroll/localStorage state leaks between them
   const ctx=await b.newContext({viewport:{width:w,height:w===390?844:w===768?1024:900}});
+  await cacheThirdParty(ctx);
   await ctx.addInitScript(v=>localStorage.setItem("watchino_bag_v1",v),BAG);
   for(const [name,url,ready] of PAGES){
     const p=await ctx.newPage();
@@ -41,4 +66,7 @@ for(const w of WIDTHS){
 }
 await b.close();
 const fails=rows.filter(r=>r.includes("FAIL")).length;
-console.log(allPass?"\nALL 44 PASS":`\n${fails} FAILURE(S)`);
+// Count the rows actually run. This said "ALL 44 PASS" from when the matrix was
+// four pages, and kept saying it after it grew to eight.
+console.log(allPass?`\nALL ${rows.length} PASS`:`\n${fails} FAILURE(S) of ${rows.length}`);
+process.exit(allPass?0:1);

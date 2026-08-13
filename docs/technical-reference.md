@@ -1,17 +1,8 @@
-# Selldone Static Storefront and Dashboard
+# Technical reference
 
-[![GitHub Repository](https://img.shields.io/badge/GitHub-View%20on%20GitHub-181717?logo=github&logoColor=white)](https://github.com/pajuhaan/selldone-custom-storefront-backoffice-1)
-
-A fully static Selldone storefront plus browser-side dashboard for Cloudflare Workers Static Assets.
-
-Selldone remains the commerce backend. This repository only ships static HTML, CSS, and JavaScript:
-
-- Storefront: `/`
-- Dashboard: `/dashboard/`
-- OAuth callback: `/callback/`
-- Static build output: `dist/`
-
-There is no production Node server. The local Node script is only a development file server.
+Architecture notes carried over from the reference project's README, corrected
+for Watchino. The root README covers the shop, the catalogue and the design
+language; this file covers how the thing is built, configured and shipped.
 
 ## Project layout
 
@@ -19,7 +10,7 @@ There is no production Node server. The local Node script is only a development 
 - `dashboard/` - dashboard source served at `/dashboard/`
 - `callback/` - Selldone OAuth callback page served at `/callback/`
 - `shared/` - shared browser modules used by storefront, dashboard, and callback
-- `scripts/build-static.mjs` - creates Cloudflare Pages output in `dist/`
+- `scripts/build-static.mjs` - creates the Workers Static Assets output in `dist/`
 - `scripts/dev-static.mjs` - local static file server for development only
 - `wrangler.toml` - Cloudflare Workers Static Assets config
 
@@ -80,7 +71,7 @@ Cloudflare Workers Builds settings:
 - Also registered on the OAuth client: `https://watchino.myselldone.com/callback/`
   (the Selldone subdomain). Redirect matching is exact, including the trailing slash.
 
-`wrangler.toml` deploys `dist/` with Workers Static Assets. `/dashboard/` and `/callback/` are real directory index pages, and unknown client routes fall back to the SPA shell.
+`wrangler.toml` deploys `dist/` with Workers Static Assets as the Worker `watchino`. `/dashboard/` and `/callback/` are real directory index pages, and unknown client routes fall back to the SPA shell.
 
 ## API model
 
@@ -102,3 +93,20 @@ Path: /
 ```
 
 See `docs/static-cloudflare-pages.md`.
+
+## Verification tooling
+
+Checks used while building the storefront. They live outside the repo at the
+workspace root and need Playwright, which is a devDependency here.
+
+- `audit-run.mjs` - ten-point audit (overflow, 44px tap targets, console and
+  network errors, no `api.selldone.com`, broken images, explicit image
+  dimensions, palette, card shadows, fonts, AA contrast) across four pages at
+  eleven viewport widths.
+- `imgsweep.mjs` - asserts no `<img>` exceeds its container's content box, and
+  that any box declaring `aspect-ratio` renders at that ratio. Covers all 35
+  product pages plus home, shop, cart drawer and checkout.
+- `capture.mjs` - screenshot capture, including scroll-linked before/after pairs.
+
+Both checks were validated by running them against a known-broken build first:
+a check that has only ever passed proves nothing.

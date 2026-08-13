@@ -9,8 +9,10 @@ Cloudflare Workers Builds settings:
 - Deploy command: `npx wrangler deploy`
 - Non-production branch deploy command: `npx wrangler versions upload`
 - Path: `/`
-- Production domain: `watchino.myselldone.com`
-- OAuth callback URL: `https://watchino.myselldone.com/callback/`
+- Production domain: `watchino.selldone.shop`
+- OAuth callback URL: `https://watchino.selldone.shop/callback/`
+- Also registered on the OAuth client: `https://watchino.myselldone.com/callback/`
+  (the Selldone subdomain). Redirect matching is exact, including the trailing slash.
 
 > The worker name must match `name` in `wrangler.toml`. It was `selldone-shop-a1`,
 > which is a different, live project on a production domain; deploying under that

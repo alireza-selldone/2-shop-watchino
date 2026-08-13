@@ -112,7 +112,13 @@ npm run build:static        # → dist/
 
 ### Checking it
 
-The four assertions this README makes are executable. Start the dev server, then:
+The four assertions this README makes are executable. Once per machine, fetch the browser they drive — `npm install` does not, because nothing else in the repo needs it:
+
+```bash
+npx playwright install chromium
+```
+
+Then, with the dev server running:
 
 ```bash
 npm run check               # all four

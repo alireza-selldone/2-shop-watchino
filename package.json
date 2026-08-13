@@ -12,5 +12,8 @@
     "start": "npm run dev:static"
   },
   "private": true,
-  "type": "module"
+  "type": "module",
+  "devDependencies": {
+    "wrangler": "4.122.0"
+  }
 }

@@ -13,6 +13,24 @@ These files keep their `{{PLACEHOLDER}}` tokens on purpose. They travel with the
 repository so the next shop built from it starts with content rather than four
 blank pages. Fill the tokens in, do not edit them out of the source files.
 
+## These are the source of the live pages
+
+`storefront/about-us.html`, `terms.html`, `privacy.html` and `contact-us.html`
+are **rendered from these Markdown files** — edit the Markdown, not the HTML.
+
+They are real pages on the Worker rather than links to Selldone-hosted ones for
+a specific reason. `wrangler.toml` sets
+`not_found_handling = "single-page-application"`, so a path with no matching
+asset answers **200 with the homepage**. A footer linking to `/about-us` before
+these files existed looked like it worked, returned 200, and silently delivered
+the wrong page — worse than a visibly dead link. The pages exist so the hrefs
+are true.
+
+Because of that, any check on these pages has to compare the response against
+the homepage, not just read the status code. `pagecheck.mjs` does, and it keeps
+one deliberately unrouted path in the run to prove the comparison can still
+tell the two apart.
+
 ## Not legal advice
 
 **Terms and Privacy here are a reasonable starting point, not reviewed legal

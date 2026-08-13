@@ -28,6 +28,13 @@ This project is a fully static Selldone storefront plus browser-side dashboard. 
   - `pajulina_dashboard_oauth_tokens_v1`
 - Do not add Node-only API routes for production features.
 - Existing storefront `/api/storefront/*` calls are browser-intercepted by `storefront/static-storefront-api.js` and translated to real XAPI requests.
+  - **Decided 13 Aug 2026: this shim is being removed.** Call `storefrontAuth.session()` and the
+    XAPI endpoints directly instead — translating a fake path to a real one is all the shim ever
+    did, and the indirection hides which XAPI call a feature actually makes. Not yet carried out;
+    the account/search wiring is the change that removes it. Until then the interception still
+    stands, and `dev-static.mjs` still answers `/api/storefront/*` with a 501 explaining that.
+  - Storefront search is client-side over the loaded catalogue, matching the reference app. Do not
+    add an XAPI search round-trip for 35 products.
 - Storefront order history is physical-only and loads from XAPI `GET /shops/@{shop}/basket/orders-PHYSICAL` with the `order-history` scope.
 - Storefront order detail loads from XAPI `GET /shops/@{shop}/baskets/{basket_id}` with the storefront customer token.
 - Storefront cart reads and mutations must use real Selldone XAPI. This shop sells physical products only, so cart state must load the physical basket from shop-info `baskets` and bill data. Basket item updates use `PUT /shops/@{shop}/basket/{product_id}` with the final `count`.
@@ -54,6 +61,13 @@ This project is a fully static Selldone storefront plus browser-side dashboard. 
 - Use Bootstrap-compatible markup and Bootstrap Icons where the dashboard already uses them.
 - Keep the visual direction modern, minimal, operational, and compact.
 - Do not duplicate account controls; the user account menu belongs in the left sidebar profile.
+- Storefront content pages (`about-us`, `terms`, `privacy`, `contact-us`) are generated from
+  `store-pages/*.md`. Edit the Markdown, not the HTML, and keep the `{{PLACEHOLDER}}` tokens in the
+  source.
+- Never link a storefront path that only resolves through `not_found_handling`. With
+  `single-page-application` set, a missing page answers 200 with the homepage, so a broken link is
+  invisible to a status-code check. Assert the response differs from the homepage as well.
+  `dev-static.mjs` emulates Cloudflare's `html_handling` so this is testable locally.
 
 ## Git And Editing Hygiene
 

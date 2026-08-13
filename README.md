@@ -1,104 +1,156 @@
-# Selldone Static Storefront and Dashboard
+<div align="center">
 
-[![GitHub Repository](https://img.shields.io/badge/GitHub-View%20on%20GitHub-181717?logo=github&logoColor=white)](https://github.com/pajuhaan/selldone-custom-storefront-backoffice-1)
+# Watchino
 
-A fully static Selldone storefront plus browser-side dashboard for Cloudflare Workers Static Assets.
+**A luxury watch storefront built on Selldone.**
+Static, framework-free, deployed on Cloudflare Workers.
 
-Selldone remains the commerce backend. This repository only ships static HTML, CSS, and JavaScript:
+[**Live site →**](https://watchino.selldone.shop)
 
-- Storefront: `/`
-- Dashboard: `/dashboard/`
-- OAuth callback: `/callback/`
-- Static build output: `dist/`
+</div>
 
-There is no production Node server. The local Node script is only a development file server.
+> Architecture, OAuth flow, API boundaries and build plumbing live in [`docs/technical-reference.md`](docs/technical-reference.md).
 
-## Project layout
+---
 
-- `storefront/` - public storefront source served at `/`
-- `dashboard/` - dashboard source served at `/dashboard/`
-- `callback/` - Selldone OAuth callback page served at `/callback/`
-- `shared/` - shared browser modules used by storefront, dashboard, and callback
-- `scripts/build-static.mjs` - creates Cloudflare Pages output in `dist/`
-- `scripts/dev-static.mjs` - local static file server for development only
-- `wrangler.toml` - Cloudflare Workers Static Assets config
+## Design direction — "Blued Steel"
 
-## Runtime configuration
+The visual language comes from horological instrumentation rather than from a generic luxury template. The accent is `#2F4E8F` — the colour steel turns at 290°C when a watchmaker blues a set of hands.
 
-Public browser-safe configuration is stored in the `<meta>` tags at the top of:
+<div align="center">
+  <img src="docs/screenshots/home-1440.png" width="800" alt="Watchino homepage: dark graphite hero with a Haute Horlogerie reference, six-collection grid below">
+  <br><em>Homepage — hero, six collections, three price registers, the salon section</em>
+</div>
 
-- `storefront/index.html`
-- `dashboard/index.html`
-- `callback/index.html`
+**What makes it specific:**
 
-Do not put secrets in HTML, JavaScript, docs, or examples. This static app must never contain client secrets, API tokens, refresh tokens, MCP credentials, or private Cloudflare tokens.
+| | |
+|---|---|
+| **Surface** | `#E9ECEE` cool dial white — deliberately not warm cream |
+| **Ink** | `#16191D` cool graphite — never pure black |
+| **Accent** | `#2F4E8F` heat-blued steel |
+| **Brass** | `#9A7B43` — Haute Horlogerie section only, nowhere else |
+| **Display** | Bodoni Moda — Didone lettering, as printed on a watch dial |
+| **Body** | Archivo |
+| **Data** | Azeret Mono, tabular figures on every price |
 
-## Local development
+**Signature element:** a vertical chapter-ring index rail down the left edge that doubles as scroll progress. Section dividers are minute markers, not plain rules — the page structure literally measures itself.
+
+**Position:** a gallery, not a sales funnel. No countdown timers, no urgency banners, no "X people viewing", no discount popups. Reduced prices show as a struck-through previous figure in muted grey, and only on the product page — never as a badge on a card.
+
+---
+
+## The pages
+
+<div align="center">
+  <img src="docs/screenshots/shop-1440.png" width="800" alt="Shop listing with filter sidebar and product grid">
+  <br><em>Shop — four filters, logarithmic price slider, 35 references</em>
+</div>
+
+<br>
+
+<div align="center">
+  <img src="docs/screenshots/product-1440.png" width="800" alt="Product page with gallery and sticky info column">
+  <br><em>Product — works for all 35 references via <code>?id=</code></em>
+</div>
+
+<br>
+
+<div align="center">
+  <img src="docs/screenshots/checkout-1440.png" width="800" alt="Five-step checkout with sticky order summary">
+  <br><em>Checkout — five steps, stripped header, physical basket only</em>
+</div>
+
+<br>
+
+<div align="center">
+  <img src="docs/screenshots/home-390.png" width="320" alt="Homepage at 390px">
+  <br><em>390px — the index rail hides below 1024, nav becomes a full-screen drawer</em>
+</div>
+
+---
+
+## Two other directions were built
+
+Both are complete four-page prototypes, kept for reference. Neither is deployed.
+
+| | |
+|---|---|
+| **The Index** | Swiss systematic, c. 1970. Inter Tight only, no serif. One signal colour, `#D8341C`. Everything numbered; collections render as a table, not a card grid. A toggle exposes the real 12-column grid. |
+| **Night Vitrine** | The boutique after closing. Fully dark, warm blacks, light as the only accent. Every product sits in its own pool of light. Adds reviews, a journal, and a three-boutique section. |
+
+---
+
+## Stack
+
+No framework, no build step beyond copying files, **zero runtime dependencies**.
+
+```
+storefront/   →  /              the customer storefront
+dashboard/    →  /dashboard/    browser-side admin
+callback/     →  /callback/     OAuth PKCE landing
+shared/       →  shared browser modules
+scripts/      →  build-static.mjs · dev-static.mjs
+dist/         →  build output (not committed)
+```
+
+**Data** comes browser-direct from `https://xapi.selldone.com`. The customer storefront never calls `api.selldone.com` — that boundary is enforced and audited.
+
+**Auth** is Authorization Code + PKCE (S256) against `selldone.com/oauth`, public client, no secret. The Stripe publishable key is read at runtime from shop gateway info and appears in no file.
+
+---
+
+## Running it
 
 ```bash
-npm install
-npm run dev:static
+npm install                 # no dependencies; installs nothing
+npm run dev:static          # http://localhost:8788/
+npm run build:static        # → dist/
 ```
 
-Default local URL:
+Deploys happen automatically: **Cloudflare Workers Builds** is connected to this repo and publishes on every push to `main`. Non-production branches get a preview URL via `wrangler versions upload`.
 
-```text
-http://localhost:8788/
-```
+---
 
-For port `5173`:
+## The catalogue
 
-```powershell
-$env:STATIC_DEV_PORT="5173"
-npm run dev:static
-```
+35 physical references, six collections, five makers, USD.
 
-Open:
+| Collection | Refs | From |
+|---|---|---|
+| Men's Classic | 6 | $3,650 |
+| Women's Collection | 6 | $4,290 |
+| Heritage & Leather | 7 | $4,950 |
+| Sport & Chronograph | 5 | $1,888.90 |
+| Diamond & Gold | 5 | $6,198.90 |
+| Haute Horlogerie | 6 | $63,778.90 |
 
-- `http://localhost:5173/`
-- `http://localhost:5173/dashboard/`
-- `http://localhost:5173/callback/`
+The price range spans $1,889 to $153,889, but 29 of 35 sit under $19,000 — which is why the shop filter uses a **logarithmic** slider. A linear track buries 83% of the catalogue in the first eighth.
 
-## Static build
+---
 
-```bash
-npm run build:static
-```
+## Things worth knowing before you change anything
 
-The deployable output is written to `dist/`. Do not commit `dist/`; Cloudflare/GitHub builds it from source.
+**No invented data.** Product reviews are driven by real ratings, which are currently zero across all 35 references, so the block shows an honest empty state. Specifications come from the real `spec` field. There are no fabricated calibers, reviewers, or colour names anywhere.
 
-## Cloudflare Workers
+**Images are contained, not cropped.** Every image sits inside its box via `object-fit: contain`, and `imgsweep.mjs` asserts it — both that no image overflows its container's content box, and that any element declaring `aspect-ratio` actually renders at it. That second assertion exists because the first one alone missed a real bug where the container itself had stretched.
 
-Cloudflare Workers Builds settings:
+**Reveal-on-scroll fails visible.** Twelve sections animate in, but they default to `opacity: 1`; the animation lives behind a `js-reveal` class added only at the moment the observer arms. If JavaScript throws, the page is still readable.
 
-- Build command: `npm run build:static`
-- Deploy command: `npx wrangler deploy`
-- Non-production branch deploy command: `npx wrangler versions upload`
-- Path: `/`
-- Production domain: `watchino.selldone.shop`
-- OAuth callback URL: `https://watchino.selldone.shop/callback/`
-- Also registered on the OAuth client: `https://watchino.myselldone.com/callback/`
-  (the Selldone subdomain). Redirect matching is exact, including the trailing slash.
+**Colour is never the only indicator.** Variant swatches carry the hex value as an accessible label plus a visible "Finish 2 of 3" ordinal. Composite variants like `#7B1FA2/#D32F2F` render as a 135° split gradient — as a raw `background-color` they are invalid CSS and render white.
 
-`wrangler.toml` deploys `dist/` with Workers Static Assets. `/dashboard/` and `/callback/` are real directory index pages, and unknown client routes fall back to the SPA shell.
+**Audited across 11 widths**, 1440 down to 390, including the 800–1000 band where a real hero-overlap bug was hiding between the obvious breakpoints.
 
-## API model
+---
 
-- Storefront reads and writes directly to `https://xapi.selldone.com` from the browser.
-- Dashboard/backoffice calls go directly to `https://api.selldone.com` from the browser.
-- OAuth authorize/token calls use `https://selldone.com/oauth` with public-client PKCE.
-- Storefront and dashboard tokens are stored separately in browser localStorage.
+## Default page content
 
-## Deploy from GitHub through Cloudflare
+`store-pages/` holds ready-made About Us, Terms, Privacy and Contact copy for the four pages Selldone generates automatically, with `{{PLACEHOLDER}}` tokens. Each carries a visible demo-content banner that **must be removed before a real shop goes live**.
 
-Use Cloudflare Workers Builds connected to this GitHub repository. The Cloudflare build form should use:
+The Terms and Privacy templates are a starting point, not legal advice, and need review against the jurisdiction they will be used in.
 
-```text
-Project name: watchino
-Build command: npm run build:static
-Deploy command: npx wrangler deploy
-Non-production branch deploy command: npx wrangler versions upload
-Path: /
-```
+---
 
-See `docs/static-cloudflare-pages.md`.
+<div align="center">
+<sub>Demonstration storefront. No order is ever placed.</sub>
+</div>

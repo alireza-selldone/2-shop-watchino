@@ -1,12 +1,12 @@
 <!doctype html>
 <html lang="en">
-  <head>
+<head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>All references — Watchino</title>
+    <title>Contact Us — Watchino</title>
     <meta
       name="description"
-      content="Browse all 35 Watchino references by collection, price, availability and brand. Men's classic, women's collection, heritage &amp; leather, sport &amp; chronograph, diamond &amp; gold, and haute horlogerie timepieces."
+      content="How to reach Watchino, what to include, and how long a reply takes."
     />
     <meta name="shop-name" content="Watchino" />
     <meta name="pajulina-app-name" content="Selldone Shop A1" />
@@ -32,7 +32,6 @@
     <link href="https://fonts.googleapis.com/css2?family=Bodoni+Moda:opsz,wght@6..96,400;6..96,500&family=Archivo:wght@400;500;600&family=Azeret+Mono:wght@400;500&display=swap" rel="stylesheet" />
     <link rel="stylesheet" href="styles.css" />
     <script type="module" src="app.js"></script>
-    <script type="module" src="shop.js"></script>
   </head>
   <body>
 
@@ -78,73 +77,67 @@
         </div>
       </header>
 
-      <main id="main" tabindex="-1" class="section" style="padding-top:44px">
-        <div class="wrap">
-          <p class="crumb"><a href="index.html">Home</a> &nbsp;/&nbsp; Collections</p>
+      <main id="main" tabindex="-1">
 
-          <div class="shop">
-
-            <form class="filters" id="filters" aria-label="Refine the collection" onsubmit="return false">
-              <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
-                <span class="eyebrow mb0">Refine</span>
-                <button type="button" class="xbtn mobonly" data-close>Done</button>
-              </div>
-
-              <div class="fgroup">
-                <h4 id="fg-collection">Collection</h4>
-                <div id="catfilters" role="group" aria-labelledby="fg-collection"></div>
-              </div>
-
-              <div class="fgroup">
-                <h4 id="fg-price">Price</h4>
-                <p class="rangeout" id="pout" role="status">&nbsp;</p>
-                <!-- Logarithmic track: 29 of 35 references sit under $19,000
-                     against a $153,889 ceiling, so a linear slider buries them
-                     in the first eighth. -->
-                <label class="sr" for="plo">Minimum price</label>
-                <input class="range" id="plo" type="range" min="0" max="100" value="0" aria-describedby="pout">
-                <label class="sr" for="phi">Maximum price</label>
-                <input class="range" id="phi" type="range" min="0" max="100" value="100" aria-describedby="pout">
-                <p class="cap mb0" style="margin-top:10px">Logarithmic scale</p>
-              </div>
-
-              <div class="fgroup">
-                <h4>Availability</h4>
-                <label class="check"><input type="checkbox" id="instock"> In stock only</label>
-              </div>
-
-              <div class="fgroup">
-                <h4 id="fg-brand">Brand</h4>
-                <div id="brandfilters" role="group" aria-labelledby="fg-brand"></div>
-              </div>
-
-              <div class="fgroup" style="border-bottom:0">
-                <button type="button" class="btn btn--line" id="clear" style="width:100%">Clear all</button>
-              </div>
-            </form>
-
-            <div>
-              <div class="listhd">
-                <div>
-                  <h1 class="h1" id="listtitle">All references</h1>
-                  <p class="lede" id="listintro" style="margin:8px 0 4px">&nbsp;</p>
-                  <p class="cap mb0" id="count" role="status">&nbsp;</p>
-                </div>
-                <div>
-                  <label class="sr" for="sort">Sort by</label>
-                  <select class="sort" id="sort">
-                    <option value="new">Newest</option>
-                    <option value="low">Price, low to high</option>
-                    <option value="high">Price, high to low</option>
-                  </select>
-                </div>
-              </div>
-              <p class="cap" data-catalog-error hidden style="margin-bottom:16px;color:var(--alert)"></p>
-              <div class="pgrid" id="pgrid"></div>
-            </div>
-
+        <section class="pghead ink">
+          <div class="wrap">
+            <p class="eyebrow eyebrow--onink">Client care</p>
+            <h1 class="h1">Contact Us</h1>
           </div>
-        </div>
+        </section>
+
+        <div class="wrap"><div class="tickrule"></div></div>
+
+        <section class="section">
+          <div class="wrap">
+            <article class="prose">
+<div class="demobanner">
+            <b>⚠️ Demonstration content — not a real policy</b>
+            <span>This page is placeholder text in a <strong>Selldone demo store</strong>, written to show how the Pages feature works. Nothing here is a binding statement, a legal document, or a description of a real business. <strong>Replace this content before going live.</strong></span>
+          </div>
+          <p>A person reads every message. Most are answered within one working day.</p>
+          <h2>Get in touch</h2>
+          <p><strong>Email</strong> — <span class="tok">{{SHOP_EMAIL}}</span><br>
+            The best way to reach us. Written questions get written answers you can refer back to.</p>
+          <p><strong>Phone</strong> — <span class="tok">{{SHOP_PHONE}}</span><br>
+            Mon–Fri, 09:00–17:00 CET</p>
+          <p><strong>Post</strong> — <span class="tok">{{SHOP_ADDRESS}}</span></p>
+          <h2>Before you write</h2>
+          <p>You will get a faster answer if you include:</p>
+          <ul>
+            <li>Your <strong>order number</strong>, if your question is about an order</li>
+            <li>The <strong>email address</strong> you ordered with</li>
+            <li><strong>Photographs</strong>, if something arrived damaged or does not look right</li>
+          </ul>
+          <h2>What we can help with</h2>
+          <p><strong>Order status</strong> — where your parcel is and when it should arrive. Tracking updates can lag behind the parcel itself, so if the tracking looks stuck for more than a couple of days, ask us.</p>
+          <p><strong>Changing an order</strong> — we can usually amend an address or cancel an item if it has not shipped. Write immediately and we will try.</p>
+          <p><strong>Returns</strong> — email us with your order number and we will confirm the return address. Please do not send anything back before we reply, or we may not be able to match it to your order.</p>
+          <p><strong>Something arrived damaged</strong> — send photographs of the item and the packaging. We resolve these ourselves rather than sending you to the carrier.</p>
+          <p><strong>Product questions</strong> — dimensions, materials, compatibility, or whether something suits what you actually need. If it does not, we will tell you.</p>
+          <p><strong>Advice before buying</strong> — describe what you are trying to do and we will point you at the right option, including a cheaper one if that is the right answer.</p>
+          <h2>Response times</h2>
+          <table>
+            <thead class="is-empty"><tr><th></th><th></th></tr></thead>
+            <tbody>
+              <tr><td>Email</td><td>Within 1 working day</td></tr>
+              <tr><td>Phone</td><td>Immediately, during opening hours</td></tr>
+              <tr><td>Returns and refunds</td><td>Confirmed within 2 working days</td></tr>
+              <tr><td>Complex or technical questions</td><td>Up to 3 working days</td></tr>
+            </tbody>
+          </table>
+          <p>We do not answer on public holidays. If you write over a weekend, expect a reply on the next working day.</p>
+          <h2>Business enquiries</h2>
+          <p><strong>Wholesale and trade</strong> — <span class="tok">{{SHOP_EMAIL}}</span>, with your business details and what you are interested in.</p>
+          <p><strong>Press</strong> — <span class="tok">{{SHOP_EMAIL}}</span>. We are happy to supply photographs and product information.</p>
+          <p><strong>Suppliers</strong> — we do read every pitch, but we add products slowly and rarely. Tell us what makes yours different rather than sending a catalogue.</p>
+          <h2>Complaints</h2>
+          <p>If something has gone wrong, say so plainly and we will try to fix it. Write to <span class="tok">{{SHOP_EMAIL}}</span> with your order number and what happened.</p>
+          <p>If you are not satisfied with how we handled it, ask for it to be escalated and someone else will review it.</p>
+            </article>
+          </div>
+        </section>
+
       </main>
 
       <footer class="ft ink">
@@ -160,16 +153,16 @@
               <ul data-collections></ul>
             </div>
             <div class="ft__col">
-              <h4>Client care</h4>
-              <ul>
-                <li><a href="/about-us">About us</a></li>
-                <li><a href="/terms#delivery">Shipping</a></li>
-                <li><a href="/terms#returns">Returns</a></li>
-                <li><a href="/terms#warranty">Warranty</a></li>
-                <li><a href="/contact-us">Contact us</a></li>
-                <li><a href="/terms">Terms</a></li>
-                <li><a href="/privacy">Privacy</a></li>
-              </ul>
+                <h4>Client care</h4>
+                <ul>
+                  <li><a href="/about-us">About us</a></li>
+                  <li><a href="/terms#delivery">Shipping</a></li>
+                  <li><a href="/terms#returns">Returns</a></li>
+                  <li><a href="/terms#warranty">Warranty</a></li>
+                  <li><a href="/contact-us">Contact us</a></li>
+                  <li><a href="/terms">Terms</a></li>
+                  <li><a href="/privacy">Privacy</a></li>
+                </ul>
             </div>
             <div class="ft__col ft__col--sub">
               <h4>New references</h4>
@@ -189,8 +182,6 @@
       </footer>
 
     </div><!-- /.page -->
-
-    <button class="fbar mobonly" data-open="filters">Filter &amp; sort</button>
 
     <!-- Mobile navigation -->
     <div class="drawer ink" role="dialog" aria-modal="true" aria-label="Menu" aria-hidden="true">

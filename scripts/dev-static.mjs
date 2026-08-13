@@ -126,6 +126,7 @@ function serveDistFile(request, response, url) {
     return;
   }
   if (!extname(pathname)) {
+    if (serveHtmlHandling(response, DIST_ROOT, requested)) return;
     serveFileOr404(response, DIST_ROOT, "index.html");
     return;
   }
@@ -135,10 +136,28 @@ function serveDistFile(request, response, url) {
 function serveWithFallback(response, root, requestedPath, fallbackPath) {
   if (serveExistingFile(response, root, requestedPath)) return;
   if (!extname(requestedPath)) {
+    if (serveHtmlHandling(response, root, requestedPath)) return;
     serveFileOr404(response, root, fallbackPath);
     return;
   }
   sendText(response, 404, "text/plain; charset=utf-8", "Not found");
+}
+
+/* Mirror Cloudflare's `html_handling = "auto-trailing-slash"`: an extensionless
+   request resolves to `<path>.html`, then `<path>/index.html`, before anything
+   falls through to the SPA handler.
+
+   Without this the dev server sent /about-us straight to not_found_handling and
+   answered 200 with the homepage — the same failure that made the footer's
+   /terms#delivery look like it worked when it did not. Emulating it here is what
+   lets a local check prove anything about production. */
+function serveHtmlHandling(response, root, requestedPath) {
+  const clean = String(requestedPath).replace(/\/+$/, "");
+  if (!clean) return false;
+  return (
+    serveExistingFile(response, root, `${clean}.html`) ||
+    serveExistingFile(response, root, `${clean}/index.html`)
+  );
 }
 
 function serveExistingFile(response, root, requestedPath) {

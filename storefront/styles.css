@@ -789,3 +789,95 @@ html.js-reveal .reveal.is-in{opacity:1;transform:none;}
   padding:14px 20px;font-size:12px;letter-spacing:.14em;text-transform:uppercase;
 }
 .skip:focus{left:0;}
+
+/* --- Footer tap targets --------------------------------------------------- */
+/* .ft ul a already sets min-height:44px, which was enough while every label was
+   a long word. The rebuilt Client care column added "Terms" — 39px wide, so
+   44 tall but under the WCAG 2.5.5 minimum on the other axis. The anchor has no
+   background or underline, so widening the hit area changes nothing visually. */
+.ft ul a{min-width:var(--tap);}
+
+/* --- Content pages (about-us, terms, privacy, contact-us) ----------------- */
+/* Long-form policy copy. One measured column; the page head carries the title
+   so the prose starts at h2 and the heading hierarchy stays honest. */
+.pghead{background:var(--graphite);color:var(--dial);padding:74px 0 62px;}
+.pghead .h1{margin-bottom:14px;}
+.pghead__meta{
+  font-family:var(--data);font-size:11.5px;letter-spacing:.1em;
+  text-transform:uppercase;color:var(--whisper);
+}
+
+.prose{max-width:72ch;}
+.prose>*+*{margin-top:19px;}
+.prose p{color:var(--slate);line-height:1.72;}
+.prose strong{color:var(--graphite);font-weight:600;}
+
+.prose h2{
+  font-family:var(--display);font-weight:400;
+  font-size:clamp(23px,2.5vw,30px);line-height:1.16;
+  color:var(--graphite);margin-top:54px;padding-top:22px;
+  border-top:1px solid var(--rule);
+  /* Sticky header is 63px once condensed; keep anchored headings clear of it. */
+  scroll-margin-top:96px;
+}
+.prose h2:first-child{margin-top:0;padding-top:0;border-top:0;}
+.prose h3{
+  font-family:var(--body);font-weight:600;font-size:16px;
+  letter-spacing:.01em;color:var(--graphite);margin-top:34px;
+}
+
+.prose a{color:var(--blued);text-decoration:underline;text-underline-offset:3px;}
+.prose a:hover{color:var(--blued-lift);}
+
+.prose ul{list-style:none;padding:0;margin-top:16px;}
+.prose li{
+  position:relative;padding-left:22px;margin-top:9px;
+  color:var(--slate);line-height:1.66;
+}
+/* Minute marker rather than a bullet — the same mark the rail and rules use. */
+.prose li::before{
+  content:"";position:absolute;left:0;top:.72em;
+  width:9px;height:1px;background:var(--blued);
+}
+
+.prose table{
+  width:100%;border-collapse:collapse;margin-top:22px;
+  font-size:14.5px;
+}
+.prose th,.prose td{
+  text-align:left;padding:12px 16px 12px 0;
+  border-bottom:1px solid var(--rule);vertical-align:top;
+}
+.prose th{
+  font-family:var(--data);font-size:10.5px;letter-spacing:.16em;
+  text-transform:uppercase;color:var(--mist-text);font-weight:400;
+  padding-bottom:9px;
+}
+.prose td:first-child{color:var(--graphite);padding-right:32px;}
+.prose td:last-child,.prose th:last-child{padding-right:0;}
+/* Two-column tables with no header row (contact response times) read as a
+   definition list; drop the empty header instead of rendering a blank strip. */
+.prose thead.is-empty{display:none;}
+
+/* An unfilled token is deliberate — Watchino has no real contact details.
+   Marked visibly so it can never be mistaken for a real address. */
+.tok{
+  font-family:var(--data);font-size:12.5px;
+  background:var(--dial);border:1px dashed var(--rule);
+  border-radius:var(--radius);padding:1px 7px;color:var(--mist-text);
+  white-space:nowrap;
+}
+
+.prose .demobanner{
+  border:1px solid #E0A800;background:#FFF8E1;border-radius:var(--radius);
+  padding:16px 18px;margin-bottom:38px;line-height:1.6;
+}
+.prose .demobanner b{display:block;color:#6E4E00;font-size:15px;margin-bottom:5px;}
+.prose .demobanner span{color:#4A3600;font-size:14px;}
+.prose .demobanner strong{color:#4A3600;}
+
+@media (max-width:700px){
+  .pghead{padding:52px 0 44px;}
+  .prose table{font-size:13.5px;}
+  .prose td:first-child{padding-right:18px;}
+}

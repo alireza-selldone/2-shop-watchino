@@ -232,12 +232,35 @@ export function closeLightbox() {
   if (!document.querySelector(".drawer.is-open,.cart.is-open")) document.documentElement.classList.remove("is-locked");
 }
 
+/* ---------- Deep-link re-anchor ---------- */
+/* The browser jumps to a #hash before the web fonts have loaded. Bodoni and
+   Archivo are metrically different from the fallbacks, so the document reflows
+   underneath the jump — on a cold load /terms#delivery landed 62px high, which
+   put the heading behind the sticky header. Re-anchor once metrics are final,
+   but never fight a reader who has already started scrolling. */
+function initDeepLink() {
+  const id = decodeURIComponent(location.hash.slice(1));
+  const target = id && document.getElementById(id);
+  if (!target || !document.fonts) return;
+
+  let moved = false;
+  const release = () => { moved = true; };
+  const opts = { passive: true, once: true };
+  ["wheel", "touchstart", "keydown"].forEach((e) => addEventListener(e, release, opts));
+
+  document.fonts.ready.then(() => {
+    if (!moved) target.scrollIntoView(); // honours scroll-margin-top
+    ["wheel", "touchstart", "keydown"].forEach((e) => removeEventListener(e, release, opts));
+  });
+}
+
 /* ---------- Boot ---------- */
 document.addEventListener("DOMContentLoaded", async () => {
   initHeader();
   initRail();
   initReveal();
   initAcc();
+  initDeepLink();
   document.querySelector(".lbox__x")?.addEventListener("click", closeLightbox);
   document.querySelector(".lbox")?.addEventListener("click", (e) => {
     if (e.target.classList.contains("lbox")) closeLightbox();

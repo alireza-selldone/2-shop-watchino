@@ -1,12 +1,12 @@
 <!doctype html>
 <html lang="en">
-  <head>
+<head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>All references — Watchino</title>
+    <title>About Watchino — Watchino</title>
     <meta
       name="description"
-      content="Browse all 35 Watchino references by collection, price, availability and brand. Men's classic, women's collection, heritage &amp; leather, sport &amp; chronograph, diamond &amp; gold, and haute horlogerie timepieces."
+      content="Who Watchino is, how references are chosen, and what to expect after the sale."
     />
     <meta name="shop-name" content="Watchino" />
     <meta name="pajulina-app-name" content="Selldone Shop A1" />
@@ -32,7 +32,6 @@
     <link href="https://fonts.googleapis.com/css2?family=Bodoni+Moda:opsz,wght@6..96,400;6..96,500&family=Archivo:wght@400;500;600&family=Azeret+Mono:wght@400;500&display=swap" rel="stylesheet" />
     <link rel="stylesheet" href="styles.css" />
     <script type="module" src="app.js"></script>
-    <script type="module" src="shop.js"></script>
   </head>
   <body>
 
@@ -78,73 +77,47 @@
         </div>
       </header>
 
-      <main id="main" tabindex="-1" class="section" style="padding-top:44px">
-        <div class="wrap">
-          <p class="crumb"><a href="index.html">Home</a> &nbsp;/&nbsp; Collections</p>
+      <main id="main" tabindex="-1">
 
-          <div class="shop">
-
-            <form class="filters" id="filters" aria-label="Refine the collection" onsubmit="return false">
-              <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
-                <span class="eyebrow mb0">Refine</span>
-                <button type="button" class="xbtn mobonly" data-close>Done</button>
-              </div>
-
-              <div class="fgroup">
-                <h4 id="fg-collection">Collection</h4>
-                <div id="catfilters" role="group" aria-labelledby="fg-collection"></div>
-              </div>
-
-              <div class="fgroup">
-                <h4 id="fg-price">Price</h4>
-                <p class="rangeout" id="pout" role="status">&nbsp;</p>
-                <!-- Logarithmic track: 29 of 35 references sit under $19,000
-                     against a $153,889 ceiling, so a linear slider buries them
-                     in the first eighth. -->
-                <label class="sr" for="plo">Minimum price</label>
-                <input class="range" id="plo" type="range" min="0" max="100" value="0" aria-describedby="pout">
-                <label class="sr" for="phi">Maximum price</label>
-                <input class="range" id="phi" type="range" min="0" max="100" value="100" aria-describedby="pout">
-                <p class="cap mb0" style="margin-top:10px">Logarithmic scale</p>
-              </div>
-
-              <div class="fgroup">
-                <h4>Availability</h4>
-                <label class="check"><input type="checkbox" id="instock"> In stock only</label>
-              </div>
-
-              <div class="fgroup">
-                <h4 id="fg-brand">Brand</h4>
-                <div id="brandfilters" role="group" aria-labelledby="fg-brand"></div>
-              </div>
-
-              <div class="fgroup" style="border-bottom:0">
-                <button type="button" class="btn btn--line" id="clear" style="width:100%">Clear all</button>
-              </div>
-            </form>
-
-            <div>
-              <div class="listhd">
-                <div>
-                  <h1 class="h1" id="listtitle">All references</h1>
-                  <p class="lede" id="listintro" style="margin:8px 0 4px">&nbsp;</p>
-                  <p class="cap mb0" id="count" role="status">&nbsp;</p>
-                </div>
-                <div>
-                  <label class="sr" for="sort">Sort by</label>
-                  <select class="sort" id="sort">
-                    <option value="new">Newest</option>
-                    <option value="low">Price, low to high</option>
-                    <option value="high">Price, high to low</option>
-                  </select>
-                </div>
-              </div>
-              <p class="cap" data-catalog-error hidden style="margin-bottom:16px;color:var(--alert)"></p>
-              <div class="pgrid" id="pgrid"></div>
-            </div>
-
+        <section class="pghead ink">
+          <div class="wrap">
+            <p class="eyebrow eyebrow--onink">The house</p>
+            <h1 class="h1">About Watchino</h1>
           </div>
-        </div>
+        </section>
+
+        <div class="wrap"><div class="tickrule"></div></div>
+
+        <section class="section">
+          <div class="wrap">
+            <article class="prose">
+<div class="demobanner">
+            <b>⚠️ Demonstration content — not a real policy</b>
+            <span>This page is placeholder text in a <strong>Selldone demo store</strong>, written to show how the Pages feature works. Nothing here is a binding statement, a legal document, or a description of a real business. <strong>Replace this content before going live.</strong></span>
+          </div>
+          <h2>Who we are</h2>
+          <p>Watchino is an online store built around a simple idea: sell fewer things, know them better, and stand behind every one of them.</p>
+          <p>We started in 1946 and we still work the same way. Every item in our catalogue is chosen by a person, not a purchasing algorithm. If we would not use it ourselves or recommend it to someone we know, it does not go on the shelf.</p>
+          <h2>How we choose what we sell</h2>
+          <p>Three questions decide whether something makes it into the catalogue.</p>
+          <p><strong>Is it well made?</strong> We look at materials, construction and how a product holds up after months of use rather than how it photographs on day one.</p>
+          <p><strong>Is it honestly priced?</strong> We would rather carry one good option at a fair price than four variations designed to make a fifth look reasonable.</p>
+          <p><strong>Can we support it?</strong> If we cannot answer questions about a product, source a replacement part, or handle a return without an argument, we do not list it.</p>
+          <h2>What you can expect from us</h2>
+          <p><strong>Straight answers.</strong> If a product is not right for what you described, we will say so, even when that costs us the sale.</p>
+          <p><strong>Real availability.</strong> What the site says is in stock is in stock. We do not take orders for things we cannot ship.</p>
+          <p><strong>A person, not a queue.</strong> Write to us and a person reads it. Most questions are answered within one working day.</p>
+          <p><strong>Careful packing.</strong> Things arrive the way they left. If something is damaged in transit, that is on us to fix, not on you to prove.</p>
+          <h2>After the sale</h2>
+          <p>The relationship does not end when the parcel does. If something goes wrong within the returns window, we make it right. If it goes wrong later, we will still help you find a solution — a repair, a part, or honest advice about whether it is worth fixing.</p>
+          <h2>Where we are</h2>
+          <p><span class="tok">{{SHOP_ADDRESS}}</span></p>
+          <p>We are reachable at <span class="tok">{{SHOP_EMAIL}}</span> and, during business hours, at <span class="tok">{{SHOP_PHONE}}</span>.</p>
+          <p>If you would rather see something in person before buying, get in touch and we will arrange it where we can.</p>
+            </article>
+          </div>
+        </section>
+
       </main>
 
       <footer class="ft ink">
@@ -160,16 +133,16 @@
               <ul data-collections></ul>
             </div>
             <div class="ft__col">
-              <h4>Client care</h4>
-              <ul>
-                <li><a href="/about-us">About us</a></li>
-                <li><a href="/terms#delivery">Shipping</a></li>
-                <li><a href="/terms#returns">Returns</a></li>
-                <li><a href="/terms#warranty">Warranty</a></li>
-                <li><a href="/contact-us">Contact us</a></li>
-                <li><a href="/terms">Terms</a></li>
-                <li><a href="/privacy">Privacy</a></li>
-              </ul>
+                <h4>Client care</h4>
+                <ul>
+                  <li><a href="/about-us">About us</a></li>
+                  <li><a href="/terms#delivery">Shipping</a></li>
+                  <li><a href="/terms#returns">Returns</a></li>
+                  <li><a href="/terms#warranty">Warranty</a></li>
+                  <li><a href="/contact-us">Contact us</a></li>
+                  <li><a href="/terms">Terms</a></li>
+                  <li><a href="/privacy">Privacy</a></li>
+                </ul>
             </div>
             <div class="ft__col ft__col--sub">
               <h4>New references</h4>
@@ -189,8 +162,6 @@
       </footer>
 
     </div><!-- /.page -->
-
-    <button class="fbar mobonly" data-open="filters">Filter &amp; sort</button>
 
     <!-- Mobile navigation -->
     <div class="drawer ink" role="dialog" aria-modal="true" aria-label="Menu" aria-hidden="true">

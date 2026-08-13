@@ -2,6 +2,7 @@
   "scripts": {
     "build": "npm run build:static",
     "build:static": "node scripts/build-static.mjs",
+    "build:pages": "node scripts/build-pages.mjs",
     "dev": "npm run dev:static",
     "dev:static": "node scripts/dev-static.mjs",
     "deploy": "npx wrangler deploy",
@@ -9,11 +10,17 @@
     "deploy:worker-version": "npx wrangler versions upload",
     "preview": "npm run preview:static",
     "preview:static": "npm run build:static && node scripts/dev-static.mjs --dist",
-    "start": "npm run dev:static"
+    "start": "npm run dev:static",
+    "check": "npm run check:audit && npm run check:images && npm run check:pages && npm run check:controls",
+    "check:audit": "node scripts/audit-run.mjs",
+    "check:images": "node scripts/imgsweep.mjs",
+    "check:pages": "node scripts/pagecheck.mjs",
+    "check:controls": "node scripts/deadctl.mjs"
   },
   "private": true,
   "type": "module",
   "devDependencies": {
+    "playwright": "1.62.1",
     "wrangler": "4.122.0"
   }
 }

@@ -27,9 +27,9 @@ the wrong page — worse than a visibly dead link. The pages exist so the hrefs
 are true.
 
 Because of that, any check on these pages has to compare the response against
-the homepage, not just read the status code. `pagecheck.mjs` does, and it keeps
-one deliberately unrouted path in the run to prove the comparison can still
-tell the two apart.
+the homepage, not just read the status code. `scripts/pagecheck.mjs` does (`npm run check:pages`), and it
+keeps one deliberately unrouted path in the run to prove the comparison can
+still tell the two apart.
 
 ## Not legal advice
 

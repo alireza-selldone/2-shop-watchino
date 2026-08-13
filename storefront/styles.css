@@ -34,6 +34,9 @@
   /* State */
   --stock:#3F6B54;
   --alert:#8C4A3F;
+  /* --alert is 2.69:1 on graphite. The footer is the only place an error is
+     spoken on a dark surface, so it needs a tone that clears AA there. */
+  --alert-lift:#E39685;
 
   /* Type */
   --display:"Bodoni Moda",'Didot','Times New Roman',serif;
@@ -790,6 +793,12 @@ html.js-reveal .reveal.is-in{opacity:1;transform:none;}
 }
 .skip:focus{left:0;}
 
+/* --- Newsletter feedback --------------------------------------------------- */
+.sub__say{margin:10px 0 0;}
+.ink .sub__say.is-bad{color:var(--alert-lift);}
+.sub__say.is-bad{color:var(--alert);}
+.sub input:disabled,.sub button:disabled{opacity:.55;cursor:default;}
+
 /* --- Footer tap targets --------------------------------------------------- */
 /* .ft ul a already sets min-height:44px, which was enough while every label was
    a long word. The rebuilt Client care column added "Terms" — 39px wide, so
@@ -807,9 +816,18 @@ html.js-reveal .reveal.is-in{opacity:1;transform:none;}
   text-transform:uppercase;color:var(--whisper);
 }
 
-.prose{max-width:72ch;}
-.prose>*+*{margin-top:19px;}
-.prose p{color:var(--slate);line-height:1.72;}
+/* One measure, one axis. The title block and the body share this column so the
+   page reads as a composed page rather than as text that ran out. Left-aligned
+   at 72ch it sat 660px wide with ~600px of dead space beside it at 1440, and
+   the h1 ran the full 1256px — title and body on two different axes. */
+.pgcol,.prose{max-width:700px;margin-inline:auto;}
+
+/* 700px at the 16px UI size measures ~104 characters, well past the readable
+   band. Long-form reading carries larger type than interface text, so the
+   column holds its width and the type grows into it: ~79 characters at 700px. */
+.prose{font-size:21px;}
+.prose>*+*{margin-top:22px;}
+.prose p{color:var(--slate);line-height:1.68;}
 .prose strong{color:var(--graphite);font-weight:600;}
 
 .prose h2{
@@ -822,7 +840,7 @@ html.js-reveal .reveal.is-in{opacity:1;transform:none;}
 }
 .prose h2:first-child{margin-top:0;padding-top:0;border-top:0;}
 .prose h3{
-  font-family:var(--body);font-weight:600;font-size:16px;
+  font-family:var(--body);font-weight:600;font-size:18px;
   letter-spacing:.01em;color:var(--graphite);margin-top:34px;
 }
 
@@ -831,8 +849,8 @@ html.js-reveal .reveal.is-in{opacity:1;transform:none;}
 
 .prose ul{list-style:none;padding:0;margin-top:16px;}
 .prose li{
-  position:relative;padding-left:22px;margin-top:9px;
-  color:var(--slate);line-height:1.66;
+  position:relative;padding-left:26px;margin-top:11px;
+  color:var(--slate);line-height:1.62;
 }
 /* Minute marker rather than a bullet — the same mark the rail and rules use. */
 .prose li::before{
@@ -841,8 +859,8 @@ html.js-reveal .reveal.is-in{opacity:1;transform:none;}
 }
 
 .prose table{
-  width:100%;border-collapse:collapse;margin-top:22px;
-  font-size:14.5px;
+  width:100%;border-collapse:collapse;margin-top:26px;
+  font-size:17px;
 }
 .prose th,.prose td{
   text-align:left;padding:12px 16px 12px 0;
@@ -862,7 +880,7 @@ html.js-reveal .reveal.is-in{opacity:1;transform:none;}
 /* An unfilled token is deliberate — Watchino has no real contact details.
    Marked visibly so it can never be mistaken for a real address. */
 .tok{
-  font-family:var(--data);font-size:12.5px;
+  font-family:var(--data);font-size:16px;
   background:var(--dial);border:1px dashed var(--rule);
   border-radius:var(--radius);padding:1px 7px;color:var(--mist-text);
   white-space:nowrap;
@@ -878,6 +896,10 @@ html.js-reveal .reveal.is-in{opacity:1;transform:none;}
 
 @media (max-width:700px){
   .pghead{padding:52px 0 44px;}
-  .prose table{font-size:13.5px;}
+  /* The column is viewport-bound below 700px, so the type comes back down to
+     keep the measure from collapsing to ~30 characters on a phone. */
+  .prose{font-size:17px;}
+  .prose table{font-size:15px;}
   .prose td:first-child{padding-right:18px;}
+  .tok{font-size:14px;}
 }

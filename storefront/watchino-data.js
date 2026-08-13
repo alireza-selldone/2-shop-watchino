@@ -27,6 +27,31 @@ const URL_PRODUCTS_ALL = (limit = 250) =>
   `${SHOP.xapi}/shops/@${SHOP.handle}/products/all?dir=*&limit=${limit}` +
   `&products_only=true&with_category=true&with_total=true`;
 
+/* Audience capture — xapi.stream.audience.submit in the endpoint registry.
+   POST /shops/{shop_id}/audience/{access_key}. Takes the numeric shop id, not
+   the @handle the catalog builders use. The `newsletter` key is the default web
+   audience stream and tags the record automatically. Public: no Authorization
+   header, no S-Guest — this is a form a visitor submits before signing in. */
+const URL_AUDIENCE = (accessKey = "newsletter") =>
+  `${SHOP.xapi}/shops/${SHOP.id}/audience/${encodeURIComponent(accessKey)}`;
+
+export async function subscribe(email, { accessKey = "newsletter", tags } = {}) {
+  const res = await fetch(URL_AUDIENCE(accessKey), {
+    method: "POST",
+    headers: { "Content-Type": "application/json", Accept: "application/json" },
+    body: JSON.stringify(tags ? { email, tags } : { email }),
+  });
+  // Selldone returns business errors inside a 200 as {error:true,error_msg},
+  // so an ok status alone does not mean the address was accepted.
+  const body = await res.json().catch(() => null);
+  if (!res.ok) throw new Error(`Subscribe failed (${res.status})`);
+  if (body?.error) {
+    const msg = body.error_msg;
+    throw new Error(typeof msg === "string" ? msg : "That address was not accepted.");
+  }
+  return body;
+}
+
 /* ---------- Images ---------- */
 export function img(path, size) {
   return selldoneImagePathToUrl(path, { shopId: SHOP.id, scope: "products", size });

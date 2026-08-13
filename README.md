@@ -91,6 +91,8 @@ dashboard/    →  /dashboard/    browser-side admin
 callback/     →  /callback/     OAuth PKCE landing
 shared/       →  shared browser modules
 scripts/      →  build-static.mjs · dev-static.mjs
+                 audit-run.mjs · imgsweep.mjs · pagecheck.mjs · deadctl.mjs
+store-pages/  →  Markdown source for the four content pages
 dist/         →  build output (not committed)
 ```
 
@@ -103,10 +105,28 @@ dist/         →  build output (not committed)
 ## Running it
 
 ```bash
-npm install                 # no dependencies; installs nothing
+npm install                 # dev tooling only — wrangler and playwright
 npm run dev:static          # http://localhost:8788/
 npm run build:static        # → dist/
 ```
+
+### Checking it
+
+The four assertions this README makes are executable. Start the dev server, then:
+
+```bash
+npm run check               # all four
+```
+
+| | |
+|---|---|
+| `check:audit` | 10 checks × 8 pages × 11 widths, 1440 → 390 |
+| `check:images` | no image escapes its content box; declared `aspect-ratio` actually renders |
+| `check:pages` | every footer link resolves to content that is **not** the homepage |
+| `check:controls` | no button or link without a handler or destination |
+
+Each takes an optional base URL, so the same checks run against a deployment:
+`node scripts/pagecheck.mjs https://watchino.selldone.shop`.
 
 Deploys happen automatically: **Cloudflare Workers Builds** is connected to this repo and publishes on every push to `main`. Non-production branches get a preview URL via `wrangler versions upload`.
 
@@ -133,7 +153,7 @@ The price range spans $1,889 to $153,889, but 29 of 35 sit under $19,000 — whi
 
 **No invented data.** Product reviews are driven by real ratings, which are currently zero across all 35 references, so the block shows an honest empty state. Specifications come from the real `spec` field. There are no fabricated calibers, reviewers, or colour names anywhere.
 
-**Images are contained, not cropped.** Every image sits inside its box via `object-fit: contain`, and `imgsweep.mjs` asserts it — both that no image overflows its container's content box, and that any element declaring `aspect-ratio` actually renders at it. That second assertion exists because the first one alone missed a real bug where the container itself had stretched.
+**Images are contained, not cropped.** Every image sits inside its box via `object-fit: contain`, and `scripts/imgsweep.mjs` asserts it — both that no image overflows its container's content box, and that any element declaring `aspect-ratio` actually renders at it. That second assertion exists because the first one alone missed a real bug where the container itself had stretched.
 
 **Reveal-on-scroll fails visible.** Twelve sections animate in, but they default to `opacity: 1`; the animation lives behind a `js-reveal` class added only at the moment the observer arms. If JavaScript throws, the page is still readable.
 
@@ -145,7 +165,11 @@ The price range spans $1,889 to $153,889, but 29 of 35 sit under $19,000 — whi
 
 ## Default page content
 
-`store-pages/` holds ready-made About Us, Terms, Privacy and Contact copy for the four pages Selldone generates automatically, with `{{PLACEHOLDER}}` tokens. Each carries a visible demo-content banner that **must be removed before a real shop goes live**.
+`store-pages/` holds ready-made About Us, Terms, Privacy and Contact copy, with `{{PLACEHOLDER}}` tokens. Each carries a visible demo-content banner that **must be removed before a real shop goes live**.
+
+The Markdown is the source. `npm run build:pages` renders it into `storefront/about-us.html`, `terms.html`, `privacy.html` and `contact-us.html`, filling the tokens and reusing `index.html`'s header and footer — so edit the Markdown, not the HTML.
+
+They are pages on this Worker rather than links to Selldone-hosted ones because `not_found_handling = "single-page-application"` answers **200 with the homepage** for any path that has no asset. Linking `/about-us` before the file existed looked like it worked. `npm run check:pages` compares each response against the homepage for exactly that reason.
 
 The Terms and Privacy templates are a starting point, not legal advice, and need review against the jurisdiction they will be used in.
 

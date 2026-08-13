@@ -6,6 +6,7 @@ import {
   loadCatalog, money, img, catOf, byId,
   swatchStyle, swatchLabel, isComposite,
   readBag, addToBag, removeFromBag, bagCount, bagLines, bagSubtotal,
+  subscribe,
 } from "./watchino-data.js";
 
 let CAT = null;
@@ -232,6 +233,65 @@ export function closeLightbox() {
   if (!document.querySelector(".drawer.is-open,.cart.is-open")) document.documentElement.classList.remove("is-locked");
 }
 
+/* ---------- Newsletter ---------- */
+/* The footer Subscribe button had no handler on all seven pages that carry a
+   footer. It posts to the Selldone audience stream now. Unlike the rest of the
+   storefront this is a write, so it is the one control that needs in-flight
+   state and a spoken result — a form that silently does nothing is worse than
+   one that is visibly absent. */
+function initNewsletter() {
+  const box = document.querySelector(".sub");
+  if (!box) return;
+  const input = box.querySelector("input[type=email]");
+  const btn = box.querySelector("button");
+  if (!input || !btn) return;
+
+  const say = document.createElement("p");
+  say.className = "cap sub__say";
+  say.setAttribute("role", "status");        // announced without stealing focus
+  say.hidden = true;
+  box.after(say);
+
+  const show = (msg, bad) => {
+    say.textContent = msg;
+    say.hidden = false;
+    say.classList.toggle("is-bad", Boolean(bad));
+  };
+
+  let busy = false;
+  async function send() {
+    if (busy) return;
+    const email = input.value.trim();
+    // Let the browser's own email validation speak first; it is localised.
+    if (!email || !input.checkValidity()) {
+      show("Enter an email address so we know where to write.", true);
+      input.focus();
+      return;
+    }
+    busy = true;
+    btn.disabled = true;
+    input.disabled = true;
+    show("Signing you up…");
+    try {
+      await subscribe(email);
+      show("Thank you — we will write when something arrives.");
+      input.value = "";
+    } catch (err) {
+      show(err.message || "That did not go through. Try again shortly.", true);
+      console.error("[watchino] subscribe failed", err);
+    } finally {
+      busy = false;
+      btn.disabled = false;
+      input.disabled = false;
+    }
+  }
+
+  btn.addEventListener("click", send);
+  input.addEventListener("keydown", (e) => {
+    if (e.key === "Enter") { e.preventDefault(); send(); }
+  });
+}
+
 /* ---------- Deep-link re-anchor ---------- */
 /* The browser jumps to a #hash before the web fonts have loaded. Bodoni and
    Archivo are metrically different from the fallbacks, so the document reflows
@@ -261,6 +321,7 @@ document.addEventListener("DOMContentLoaded", async () => {
   initReveal();
   initAcc();
   initDeepLink();
+  initNewsletter();
   document.querySelector(".lbox__x")?.addEventListener("click", closeLightbox);
   document.querySelector(".lbox")?.addEventListener("click", (e) => {
     if (e.target.classList.contains("lbox")) closeLightbox();

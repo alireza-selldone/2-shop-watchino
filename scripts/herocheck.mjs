@@ -1,8 +1,9 @@
 /* Hero verification.
 
    The constraint that breaks first is the crop: object-fit:cover discards the
-   sides, and the woman's wrist sits at 80.7% across, so it leaves the frame
-   before anything else does. This computes where each measured dial actually
+   sides, and the woman's wrist sits at 77.4% across, so it leaves the frame
+   before anything else does. Below 951px no crop satisfies both that and
+   keeping the copy clear of the man, which is why the hero stacks there. This computes where each measured dial actually
    lands on screen after cover-cropping, and fails if either is outside the
    visible box or too close to its edge to be usable.
 
@@ -16,9 +17,11 @@
 import { chromium } from "playwright";
 
 const B = (process.argv[2] || "http://localhost:8788").replace(/\/+$/, "");
+/* Re-measured against the new photograph: the watches are steel rectangles now,
+   so the previous purple-dial coordinates are void. */
 const SPOTS = [
-  { name: "man's wrist", x: 65.4, y: 57.5 },
-  { name: "woman's wrist", x: 80.7, y: 54.6 },
+  { name: "man's wrist", x: 53.9, y: 70.6 },
+  { name: "woman's wrist", x: 77.4, y: 63.5 },
 ];
 const EDGE = 1.5; // % of the box a dial must stay clear of the edge by
 
@@ -41,7 +44,7 @@ const fail = (m) => { fails++; console.log(`  FAIL  ${m}`); };
 const pass = (m) => console.log(`  ok    ${m}`);
 
 console.log("\nHero crop — both wrists must stay in frame");
-for (const w of [1440, 1280, 1024]) {
+for (const w of [1440, 1280, 1024, 1000, 960]) {
   const p = await (await b.newContext({ viewport: { width: w, height: 900 } })).newPage();
   await p.goto(B + "/", { waitUntil: "domcontentloaded" });
   await p.waitForFunction(() => {
@@ -121,7 +124,10 @@ for (const w of [1440, 1280, 1024]) {
 
 /* ---- negative control ---------------------------------------------------- */
 console.log("\nNegative control — the same maths against a knowingly wrong crop");
-const bad = { natW: 1672, natH: 941, boxW: 1024, boxH: 900, posX: 0, posY: 50 };
+/* Hard LEFT, not hard right: both wrists sit right-of-centre in this file, so a
+   hard-right crop keeps them and would make this control silently useless. The
+   control caught that about itself on the first run. */
+const bad = { natW: 1672, natH: 941, boxW: 936, boxH: 828, posX: 0, posY: 50 };
 const badResults = SPOTS.map((s) => project(bad, s.x, s.y));
 const caught = badResults.some((r) => !(r.xPct > EDGE && r.xPct < 100 - EDGE));
 badResults.forEach((r, i) => console.log(`  object-position 0%: ${SPOTS[i].name.padEnd(14)} -> ${r.xPct.toFixed(1)}%`));

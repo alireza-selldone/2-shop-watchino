@@ -8,8 +8,8 @@ import { cardHTML, esc } from "./app.js";
 const lg = Math.log10;
 
 /* Paging. The filters always run over the WHOLE catalogue; only how much of the
-   result is painted is paged. At ~64 references the mobile listing ran past
-   30,000px, which is roughly forty screens of scrolling to reach the footer —
+   result is painted is paged. Unpaged, the mobile listing ran past 30,000px,
+   which is roughly forty screens of scrolling to reach the footer —
    and the footer now carries seven real destinations. Deliberately a button and
    not infinite scroll, which would take the footer away entirely. */
 const PAGE = 24;

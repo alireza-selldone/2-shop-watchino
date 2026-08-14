@@ -36,6 +36,65 @@ push. Disconnecting it is a dashboard action.
 
 ---
 
+## New photograph, new products (15 Aug)
+
+**Both watches changed to steel rectangles, so every coordinate was re-derived.**
+The previous purple-dial pixel search does not apply to a steel case, so the new
+positions came from cropping each wrist region and reading the case box off the
+crop: man's dial **53.9%, 70.6%**; woman's **77.4%, 63.5%**. Dots sit on the
+bracelet below each case, per the mockup.
+
+**The product images match the photograph.** 709761 Molex Rectangular Regent is
+a steel square case on a screw-link steel bracelet with a Roman dial and blue
+hands — that is the man's watch. 709762 Bonin Petite Classic is the same idiom,
+noticeably smaller, on a Panthère-style link bracelet — hers. One correction to
+the brief: **neither the photograph nor the product image shows a diamond-set
+bezel.** Hers has a polished steel bezel with corner screws. The pairing is
+right; the description was slightly off.
+
+**Categories are correct now, and that resolves last round's complaint.** The
+new references sit in Men's Classic and Women's Collection respectively, so the
+cards no longer both read "Women's Collection". The earlier pair genuinely both
+sat in Women's Collection in Selldone — that was shop data, and it is moot now.
+
+### The crop had to be re-derived, and it does not work below 951px
+
+Two constraints fight: the copy must clear the man, and the woman's wrist at
+77.4% must stay in frame. In this photograph the couple sits further left than
+in the previous one, so the old 60/68% crops ran the copy straight onto him.
+
+Sweeping object-position at each width:
+
+| Width | Feasible crop |
+|---|---|
+| 1440 | comfortable |
+| 1280 | comfortable |
+| 1024 | 43–45% only, after narrowing the copy |
+| 901 | a single value, 47% |
+| below | **none** |
+
+So the hero stacks below **951px**, not the mockup's 900. The mockup guessed;
+this is where the geometry actually fails for this file. Above it, one crop
+value serves 951–1199 and the copy narrows in two steps to buy the room.
+
+### Focus and click were cancelling each other
+
+The brief requires focus to reveal what hover reveals. But a pointer click
+focuses the button *before* it fires `click`, so an unconditional focus handler
+opened the card and the click handler then toggled it shut — every click was a
+no-op. `:focus-visible` separates them: true for keyboard focus, false for
+pointer focus. Keyboard opens on focus; mouse toggles on click.
+
+### Two smaller fixes found by looking
+
+The card inherited `.ink`'s light text colour and rendered nearly invisible on
+its own light ground. And the hero-check's negative control was pointed at a
+hard-*right* crop, which keeps both wrists in this file and would therefore have
+proved nothing — the control reported that about itself on the first run, which
+is exactly what it is for. It is hard-left now.
+
+---
+
 ## The hero markers — clickable, with the card over the photograph
 
 Superseded the earlier conclusion. The blocker was that a **hover** label needs
@@ -187,12 +246,17 @@ immediately after the models, which softens the transition into the grid.
 
 The rule was to measure, then act. Measured against the live catalogue:
 
-| Measure | Value |
+| Measure | Value (re-measured 15 Aug, 66 products) |
 |---|---|
-| Products total | 64 |
-| Products with variants | 35 (54.7%) |
-| Products with at least one variant image | **8 (12.5% of all products)** |
-| — as a share of products that *have* variants | **22.9%** |
+| Products total | 66 |
+| Products with variants | 37 (56.1%) |
+| Products with at least one variant image | **10 (15.2% of all products)** |
+| — as a share of products that *have* variants | **27.0%** |
+
+Both figures rose with the two new references and both are still under the 30%
+threshold, so the decision stands. It is closer than it was — 27.0% against 30%
+on the narrower denominator — so this is worth re-measuring rather than assuming
+next time the catalogue grows.
 
 Both readings fall under the 30% threshold, so the swatches stay as colour
 circles. The generous denominator was used deliberately: I counted variants with

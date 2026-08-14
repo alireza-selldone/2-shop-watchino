@@ -44,7 +44,7 @@ The visual language comes from horological instrumentation rather than from a ge
 
 <div align="center">
   <img src="docs/screenshots/shop-1440.png" width="800" alt="Shop listing with filter sidebar and product grid">
-  <br><em>Shop — four filters, logarithmic price slider, 64 references</em>
+  <br><em>Shop — four filters, logarithmic price slider, 66 references</em>
 </div>
 
 <br>
@@ -142,18 +142,18 @@ Deploys happen automatically: **Cloudflare Workers Builds** is connected to this
 
 ## The catalogue
 
-64 physical references, six collections, six maker names, USD.
+66 physical references, six collections, six maker names, USD.
 
 | Collection | Refs | From |
 |---|---|---|
-| Men's Classic | 11 | $3,950 |
-| Women's Collection | 10 | $4,690 |
+| Men's Classic | 12 | $3,950 |
+| Women's Collection | 11 | $4,690 |
 | Heritage & Leather | 12 | $5,350 |
 | Sport & Chronograph | 10 | $2,088.90 |
 | Diamond & Gold | 10 | $6,598.90 |
 | Haute Horlogerie | 11 | $65,778.90 |
 
-The price range spans $2,089 to $153,889. A **linear** slider would put 29 of the 64 references — 45% of the catalogue — inside its first eighth, so the shop filter uses a **logarithmic** track: its midpoint lands at $17,929 rather than $77,989. The bounds are computed from the live catalogue, not written down, so they follow the shop as it grows.
+The price range spans $2,089 to $153,889. A **linear** slider would put 29 of the 66 references — 44% of the catalogue — inside its first eighth, so the shop filter uses a **logarithmic** track: its midpoint lands at $17,929 rather than $77,989. The bounds are computed from the live catalogue, not written down, so they follow the shop as it grows.
 
 Counts on the site are read from the catalogue at runtime for the same reason. The numbers in this table are the only place they are written by hand.
 

@@ -1080,100 +1080,127 @@ html.js-reveal .reveal.is-in{opacity:1;transform:none;}
 .hero__copy{pointer-events:auto;}
 .hero__copy{max-width:34rem;}
 
-@media (min-width:1024px){ .hero__media img{object-position:68% 50%;} }
-@media (min-width:1440px){ .hero__media img{object-position:60% 50%;} }
+/* Re-derived for the new photograph: the couple sits further LEFT in this file
+   than in the previous one, so the old 60/68% crops ran the copy onto the man.
+   Lower X shows more of the empty left band and pushes the subjects right.
+   Bounded on the other side by the woman's wrist at 77.4% of the file, which
+   must stay in frame — at 1024 those two constraints were 16px apart, which is
+   why the copy narrows there too. */
+@media (min-width:951px){  .hero__media img{object-position:44% 50%;} }
+@media (min-width:1200px){ .hero__media img{object-position:26% 50%;} }
+@media (min-width:1400px){ .hero__media img{object-position:46% 50%;} }
+
+@media (max-width:1399px) and (min-width:951px){
+  .hero .h-hero{font-size:clamp(38px,6.1vw,66px);}
+  .hero .lede{max-width:34ch;}
+  .hero__copy{max-width:28rem;}
+}
+/* Below 1200 the two constraints — copy clear of the man, woman's wrist still
+   in frame — close to within a few pixels. The copy gives up the difference. */
+@media (max-width:1199px) and (min-width:951px){
+  .hero .h-hero{font-size:clamp(36px,5.6vw,58px);}
+  .hero .lede{max-width:30ch;font-size:15px;}
+  .hero__copy{max-width:23rem;}
+}
 
 /* --- Hero markers -----------------------------------------------------------
-   The control is a 44px button; the only visible part is an 8px dot. It sits
-   2.2% clear of a dial that is 1.1% wide, so it points at the watch instead of
-   covering it — the previous 44px pin was larger than the dial itself.
+   Ported from the approved mockup. A 44px button whose visible part is an 11px
+   dot, sitting on the bracelet BELOW each case so it never covers the product.
+   The card opens on click, floats over the photograph, and flips below the dot
+   when there is no room above it. */
+.hero__spots{position:absolute;inset:0;z-index:4;pointer-events:none;}
 
-   The card opens on click, not hover. A card the reader asked for may sit over
-   the photograph; a label that appears under a moving cursor may not, which is
-   what made the empty-space constraint binding before. */
-.hero__spots{position:absolute;inset:0;z-index:4;}
-
-.hero__tether{
-  position:absolute;height:1px;transform-origin:0 50%;
-  background:linear-gradient(to right,rgba(233,236,238,.85),rgba(233,236,238,.25));
-  pointer-events:none;
-}
-
-.hero__spot{position:absolute;transform:translate(-50%,-50%);}
-.hero__pin{
+.hspot{
+  position:absolute;transform:translate(-50%,-50%);pointer-events:auto;
   width:var(--tap);height:var(--tap);display:grid;place-items:center;
-  background:none;border:0;border-radius:50%;
+  border:0;background:none;padding:0;
 }
-.hero__dot{
-  width:8px;height:8px;border-radius:50%;background:var(--dial);
-  box-shadow:0 0 0 1px rgba(22,25,29,.55),0 0 12px 3px rgba(233,236,238,.35);
-  transition:transform var(--fast) var(--ease),background var(--fast) var(--ease);
+.hspot i{
+  width:11px;height:11px;border-radius:50%;background:rgba(255,255,255,.92);
+  box-shadow:0 0 0 3px rgba(255,255,255,.22),0 1px 4px rgba(0,0,0,.5);
+  transition:transform var(--fast) var(--ease),box-shadow var(--fast) var(--ease);
 }
-.hero__pin:hover .hero__dot,
-.hero__pin:focus-visible .hero__dot{transform:scale(1.55);background:var(--blued-lift);}
-.hero__spot.is-on .hero__dot{transform:scale(1.55);background:var(--blued);}
-.hero__pin:focus-visible{outline:2px solid var(--blued-lift);outline-offset:2px;}
+.hspot:hover i,.hspot[aria-expanded="true"] i{
+  transform:scale(1.25);
+  box-shadow:0 0 0 6px rgba(255,255,255,.28),0 1px 6px rgba(0,0,0,.5);
+}
+.hspot:focus-visible{outline:2px solid #fff;outline-offset:2px;border-radius:50%;}
+.hspot i::after{
+  content:"";position:absolute;width:var(--tap);height:var(--tap);border-radius:50%;
+  border:1px solid rgba(255,255,255,.45);opacity:0;
+  animation:hpulse 3.2s var(--ease) infinite;
+}
+@keyframes hpulse{0%{transform:scale(.5);opacity:.7}70%{transform:scale(1);opacity:0}100%{opacity:0}}
 
-@media (prefers-reduced-motion:no-preference){
-  .hero__dot::after{
-    content:"";position:absolute;width:8px;height:8px;border-radius:50%;
-    box-shadow:0 0 0 1px rgba(233,236,238,.5);
-    animation:dotring 3.6s var(--ease) infinite;
-  }
-  .hero__spot.is-on .hero__dot::after{animation:none;}
-  @keyframes dotring{
-    0%{transform:scale(1);opacity:0;} 35%{opacity:.75;} 100%{transform:scale(3.4);opacity:0;}
-  }
+.hcard{
+  position:absolute;z-index:5;width:300px;pointer-events:auto;
+  /* .hero carries .ink, so without this the card inherits light text and
+     renders nearly invisible on its own light ground. */
+  color:var(--graphite);
+  background:rgba(233,236,238,.97);backdrop-filter:blur(8px);
+  border:1px solid rgba(255,255,255,.5);box-shadow:0 18px 44px rgba(0,0,0,.45);
+  padding:16px;display:none;transform:translateY(6px);opacity:0;
+  transition:opacity var(--fast) var(--ease),transform var(--fast) var(--ease);
 }
-
-/* The card floats over the photograph, opening away from the couple. */
-.hero__card{
-  position:absolute;top:50%;width:270px;
-  opacity:0;visibility:hidden;pointer-events:none;
-  transition:opacity var(--fast) var(--ease),transform var(--fast) var(--ease),visibility var(--fast);
+.hcard.is-on{display:block;}
+.hcard.is-in{opacity:1;transform:none;}
+.hcard__row{display:grid;grid-template-columns:76px 1fr;gap:14px;align-items:center;}
+.hcard__row img{width:76px;height:76px;object-fit:contain;background:#fff;border:1px solid var(--rule);}
+.hcard__k{
+  font-size:10px;font-weight:600;letter-spacing:.16em;text-transform:uppercase;
+  color:var(--mist-text);margin:0 0 4px;
 }
-.hero__card--left{right:calc(50% + 26px);transform:translateY(-50%) translateX(8px);}
-.hero__card--right{left:calc(50% + 26px);transform:translateY(-50%) translateX(-8px);}
-.hero__spot.is-on .hero__card{opacity:1;visibility:visible;pointer-events:auto;transform:translateY(-50%) translateX(0);}
-
-.hero__card__in{
-  display:flex;gap:14px;align-items:center;
-  background:var(--dial-pure);color:var(--graphite);
-  border:1px solid var(--rule);border-radius:var(--radius);padding:12px;
-  box-shadow:0 18px 44px rgba(0,0,0,.45);
+.hcard b{font-family:var(--display);font-weight:400;font-size:18px;display:block;line-height:1.2;}
+.hcard .price{font-size:14px;margin-top:6px;display:block;}
+.hcard__go{
+  display:flex;align-items:flex-end;min-height:var(--tap);
+  margin-top:10px;padding-top:12px;border-top:1px solid var(--rule);
+  font-size:11px;letter-spacing:.16em;text-transform:uppercase;color:var(--graphite);
 }
-.hero__card__in:hover{border-color:var(--blued);}
-.hero__card__art{width:70px;height:70px;flex:0 0 70px;background:var(--dial);position:relative;overflow:hidden;}
-.hero__card__art img{position:absolute;inset:5px;width:calc(100% - 10px);height:calc(100% - 10px);object-fit:contain;}
-.hero__card__txt{display:flex;flex-direction:column;gap:2px;min-width:0;}
-.hero__card__cat{
-  font-size:9.5px;letter-spacing:.18em;text-transform:uppercase;color:var(--mist-text);
+.hcard__go:hover{color:var(--blued);}
+.hcard__x{
+  position:absolute;top:2px;right:2px;width:var(--tap);height:var(--tap);
+  border:0;background:none;color:var(--mist-text);font-size:17px;line-height:1;
 }
-.hero__card__name{font-family:var(--display);font-size:16px;line-height:1.2;}
-.hero__card__cta{font-size:10.5px;letter-spacing:.14em;text-transform:uppercase;color:var(--blued);margin-top:3px;}
+.hcard::before{
+  content:"";position:absolute;width:10px;height:10px;
+  background:rgba(233,236,238,.97);
+  border-left:1px solid rgba(255,255,255,.5);border-top:1px solid rgba(255,255,255,.5);
+  transform:rotate(45deg);
+}
+.hcard[data-side="below"]::before{top:-6px;left:var(--ax,34px);}
+.hcard[data-side="above"]::before{bottom:-6px;left:var(--ax,34px);transform:rotate(225deg);}
 
 @media (prefers-reduced-motion:reduce){
-  .hero__dot,.hero__card{transition:none;}
-  .hero__pin:hover .hero__dot,.hero__spot.is-on .hero__dot{transform:none;}
+  .hspot i,.hcard{transition:none;}
+  .hspot i::after{animation:none;}
+  .hspot:hover i,.hspot[aria-expanded="true"] i{transform:none;}
 }
 
-/* The two references under the photograph. Shown at every width: the whole
-   interaction on touch, and the fallback everywhere else. */
+/* auto-fit rather than a fixed max-width, so the row does not sit half empty */
 .heromob{padding-top:clamp(40px,5vw,64px);}
-.heromob .pgrid{grid-template-columns:repeat(2,1fr);gap:clamp(18px,2vw,32px);max-width:760px;}
+.heromob .pgrid{grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:clamp(18px,2vw,32px);}
 
-/* --- Hero below 768 --------------------------------------------------------
-   A 16:9 frame is ~219px tall at 390px wide, and the wrists are 15% of the
-   frame apart — no portrait crop holds both. So the photograph becomes a 4:5
-   crop centred on the couple, the hotspots are not rendered, and the two
-   references appear as ordinary cards underneath. */
-@media (max-width:767px){
-  .hero{min-height:0;display:block;}
-  .hero__media{position:relative;aspect-ratio:4/5;}
-  .hero__media img{object-position:74% 42%;}
-  .hero__grid{padding-block:40px 8px;}
+/* --- Hero below 950 ---------------------------------------------------------
+   Stack instead of overlay. At this width object-fit:cover zooms the 16:9 frame
+   so hard that the empty left band is cropped away entirely and the copy lands
+   on a face. The picture gets its own 4:5 box cropped to the RIGHT half, where
+   both people are — a centred crop pushes the woman off the edge — and the copy
+   sits on graphite beneath it. Hotspots are dropped; the cards carry the
+   products.
+
+   The mockup stacks at 900. Measured against THIS photograph the overlay stops
+   working at about 950: below it, no object-position keeps the copy clear of the
+   man and the woman's wrist inside the frame at the same time — at 901 the two
+   constraints leave a single viable value, and under that none. So the switch
+   happens where the geometry actually fails, not where the mockup guessed. */
+@media (max-width:950px){
+  .hero{min-height:0;display:flex;flex-direction:column;background:var(--graphite);}
+  .hero__media{position:relative;inset:auto;aspect-ratio:4/5;}
+  .hero__media img{width:100%;height:100%;object-position:78% 38%;}
+  .hero__grid{position:static;padding-block:32px 8px;}
+  .hero__copy{max-width:none;}
   .hero__spots{display:none;}
-  
 }
 
 /* Inline text button that reads as a link but is a real <button>. */

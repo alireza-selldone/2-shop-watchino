@@ -3,7 +3,7 @@
    Every image resolves from live XAPI through the central Selldone helper;
    the prototype's hardcoded CDN URLs are gone (5 of its 6 were 404). */
 
-import { loadCatalog, money, byId, catOf, loadReviews, HERO_IMAGE, HERO_HOTSPOTS } from "./watchino-data.js";
+import { loadCatalog, money, byId, catOf, loadReviews, HERO_IMAGE, HERO_NATURAL, HERO_HOTSPOTS } from "./watchino-data.js";
 import { cardHTML, esc } from "./app.js";
 
 /* ==========================================================================
@@ -206,21 +206,20 @@ function fillHome(cat) {
 }
 
 /* ---------- Hero markers ----------
-   A 44px button whose only visible part is an 8px dot, sitting 2.2% clear of a
-   dial that is 1.1% wide — so the control never covers the product it sells.
-   A hairline tether runs from the dot back to the dial it refers to.
+   Ported from the approved mockup. Behaviour is the mockup's; the tokens and
+   markup conventions are this codebase's.
 
-   The card opens on CLICK and floats over the photograph. That is why the empty
-   space this frame lacks does not matter: a card summoned deliberately may sit
-   over the couple, where a hover label appearing under the cursor may not.
-
-   The two references also appear as ordinary cards below the photograph. That is
-   the whole interaction on touch, and the fallback everywhere else. */
+   Dots sit on the bracelet below each case so they never cover the product.
+   Click opens a card anchored to the dot and floating over the photograph; one
+   at a time; click-outside and Escape close and return focus to the dot. The
+   card measures its own height and flips below the dot when there is no room
+   above, instead of leaving the frame. */
 function fillHotspots(cat) {
   const layer = document.querySelector("[data-hero-spots]");
   const mob = document.querySelector("[data-hero-mob]");
   const mobList = document.querySelector("[data-hero-mob-list]");
-  if (!layer) return;
+  const img = document.querySelector("[data-hero-img]");
+  if (!layer || !img) return;
 
   const found = HERO_HOTSPOTS
     .map((h) => ({ ...h, p: byId(cat, h.id) }))
@@ -229,84 +228,115 @@ function fillHotspots(cat) {
   if (!found.length) { layer.hidden = true; if (mob) mob.hidden = true; return; }
 
   layer.hidden = false;
-  layer.removeAttribute("aria-hidden");
   layer.innerHTML = found.map((h, i) => `
-    <span class="hero__tether" data-tether="${i}" aria-hidden="true"></span>
-    <div class="hero__spot" data-spot="${i}">
-      <button class="hero__pin" type="button" aria-expanded="false"
-              aria-label="${esc(h.p.name)}, ${money(h.p.price)} — show details">
-        <span class="hero__dot" aria-hidden="true"></span>
-      </button>
-      <span class="hero__card hero__card--${h.side}" role="group" aria-label="${esc(h.p.name)}">
-        <a class="hero__card__in" href="product.html?id=${h.p.id}">
-          <span class="hero__card__art"><img src="${h.p.image}" alt="" width="120" height="120"></span>
-          <span class="hero__card__txt">
-            <span class="hero__card__cat">${esc(h.p.catName)}</span>
-            <span class="hero__card__name">${esc(h.p.name)}</span>
-            <span class="price">${money(h.p.price)}</span>
-            <span class="hero__card__cta">View reference →</span>
-          </span>
-        </a>
-      </span>
+    <button class="hspot" type="button" data-spot="${i}" aria-expanded="false"
+            aria-label="${esc(h.p.name)}, ${money(h.p.price)}. Open details.">
+      <i aria-hidden="true"></i>
+    </button>
+    <div class="hcard" data-card="${i}" role="dialog" aria-label="${esc(h.p.name)}">
+      <button class="hcard__x" type="button" aria-label="Close">&times;</button>
+      <div class="hcard__row">
+        <img src="${h.p.image}" alt="" width="152" height="152">
+        <div>
+          <p class="hcard__k">${esc(h.p.catName)}</p>
+          <b>${esc(h.p.name)}</b>
+          <span class="price">${money(h.p.price)}</span>
+        </div>
+      </div>
+      <a class="hcard__go" href="product.html?id=${h.p.id}">View the reference →</a>
     </div>`).join("");
 
-  /* Coordinates are percentages of the PHOTOGRAPH; the overlay is the size of
-     the element box, and object-fit:cover crops the two apart. Project rather
-     than position by percentage — that error put a marker 68px off a wrist. */
-  const img = document.querySelector("[data-hero-img]");
-  const spots = [...layer.querySelectorAll(".hero__spot")];
-  const tethers = [...layer.querySelectorAll(".hero__tether")];
+  const spots = [...layer.querySelectorAll(".hspot")];
+  const cards = [...layer.querySelectorAll(".hcard")];
+
+  /* Image space -> box space. object-fit:cover crops, so a percentage of the
+     FILE is not a percentage of the BOX. Taken from the mockup rather than
+     re-derived: this is the maths both the code and its check got wrong. */
+  const project = (xPct, yPct) => {
+    const box = img.getBoundingClientRect();
+    const scale = Math.max(box.width / HERO_NATURAL.w, box.height / HERO_NATURAL.h);
+    const dw = HERO_NATURAL.w * scale, dh = HERO_NATURAL.h * scale;
+    const op = getComputedStyle(img).objectPosition.split(" ");
+    const ox = parseFloat(op[0]) / 100, oy = parseFloat(op[1] ?? "50%") / 100;
+    return {
+      x: (box.width - dw) * ox + dw * xPct / 100,
+      y: (box.height - dh) * oy + dh * yPct / 100,
+      box,
+    };
+  };
+
+  const CARD_W = 300, GAP = 26;
   const place = () => {
     if (!img.naturalWidth) return;
-    const r = img.getBoundingClientRect();
-    if (!r.width) return;
-    const cs = getComputedStyle(img);
-    const [ox, oy = "50%"] = cs.objectPosition.split(" ");
-    const pc = (v, px) => (v.endsWith("%") ? parseFloat(v) : (parseFloat(v) / px) * 100);
-    const scale = Math.max(r.width / img.naturalWidth, r.height / img.naturalHeight);
-    const dW = img.naturalWidth * scale, dH = img.naturalHeight * scale;
-    const offX = (r.width - dW) * (pc(ox, r.width) / 100);
-    const offY = (r.height - dH) * (pc(oy, r.height) / 100);
-    const at = (pt) => ({ x: offX + (pt.x / 100) * dW, y: offY + (pt.y / 100) * dH });
-
     found.forEach((h, i) => {
-      const m = at(h.marker), d = at(h.dial);
-      const inside = m.x > 22 && m.x < r.width - 22 && m.y > 22 && m.y < r.height - 22;
-      spots[i].style.left = `${m.x}px`;
-      spots[i].style.top = `${m.y}px`;
-      spots[i].hidden = !inside;
-      // hairline from the dot back to the dial it points at
-      const dx = d.x - m.x, dy = d.y - m.y;
-      tethers[i].style.left = `${m.x}px`;
-      tethers[i].style.top = `${m.y}px`;
-      tethers[i].style.width = `${Math.hypot(dx, dy)}px`;
-      tethers[i].style.transform = `rotate(${Math.atan2(dy, dx)}rad)`;
-      tethers[i].hidden = !inside;
+      const pt = project(h.dot.x, h.dot.y);
+      if (!pt.box.width) return;
+      spots[i].style.left = `${pt.x}px`;
+      spots[i].style.top = `${pt.y}px`;
+      const onScreen = pt.x > 16 && pt.x < pt.box.width - 16 && pt.y > 16 && pt.y < pt.box.height - 16;
+      spots[i].hidden = !onScreen;
+
+      // keep the card inside the frame, and point its arrow back at the dot
+      let cx = pt.x - 34;
+      if (cx + CARD_W > pt.box.width - 16) cx = pt.box.width - CARD_W - 16;
+      if (cx < 16) cx = 16;
+      cards[i].style.left = `${cx}px`;
+      cards[i].style.setProperty("--ax", `${pt.x - cx - 5}px`);
+
+      // above by default; below only when there is no room above
+      const cardH = cards[i].offsetHeight || 148;
+      if (pt.y - GAP - cardH > 12) {
+        cards[i].dataset.side = "above";
+        cards[i].style.top = "";
+        cards[i].style.bottom = `${pt.box.height - pt.y + GAP}px`;
+      } else {
+        cards[i].dataset.side = "below";
+        cards[i].style.bottom = "";
+        cards[i].style.top = `${pt.y + GAP}px`;
+      }
     });
   };
+
+  const close = (i, refocus) => {
+    cards[i].classList.remove("is-in");
+    spots[i].setAttribute("aria-expanded", "false");
+    setTimeout(() => cards[i].classList.remove("is-on"), 220);
+    if (refocus) spots[i].focus();
+  };
+  const open = (i) => {
+    found.forEach((_, j) => { if (j !== i) close(j); });
+    cards[i].classList.add("is-on");
+    place();                       // now it has a height, so it can be placed properly
+    requestAnimationFrame(() => cards[i].classList.add("is-in"));
+    spots[i].setAttribute("aria-expanded", "true");
+  };
+  spots.forEach((btn, i) => {
+    btn.addEventListener("click", (e) => {
+      e.stopPropagation();
+      btn.getAttribute("aria-expanded") === "true" ? close(i, true) : open(i);
+    });
+    /* Focus must reveal what hover reveals, or the feature is invisible to a
+       keyboard. But a mouse click focuses the button before it fires click — so
+       an unconditional focus handler opened the card and the click then toggled
+       it straight back shut. :focus-visible is true for keyboard focus and
+       false for pointer focus, which separates the two cleanly. */
+    btn.addEventListener("focus", () => {
+      if (btn.matches(":focus-visible")) open(i);
+    });
+    cards[i].addEventListener("click", (e) => e.stopPropagation());
+    cards[i].querySelector(".hcard__x").addEventListener("click", () => close(i, true));
+  });
+  addEventListener("click", () => found.forEach((_, i) => close(i)));
+  addEventListener("keydown", (e) => {
+    if (e.key !== "Escape") return;
+    found.forEach((_, i) => {
+      if (spots[i].getAttribute("aria-expanded") === "true") close(i, true);
+    });
+  });
+
   if (img.complete && img.naturalWidth) place();
   img.addEventListener("load", place);
   addEventListener("resize", place);
-
-  /* Click to open, click again or Escape or click-away to close. Only one card
-     at a time, so two cards can never overlap each other. */
-  const closeAll = (except) => spots.forEach((s) => {
-    if (s === except) return;
-    s.classList.remove("is-on");
-    s.querySelector(".hero__pin").setAttribute("aria-expanded", "false");
-  });
-  spots.forEach((spot) => {
-    const btn = spot.querySelector(".hero__pin");
-    btn.addEventListener("click", (e) => {
-      e.stopPropagation();
-      const open = !spot.classList.contains("is-on");
-      closeAll(spot);
-      spot.classList.toggle("is-on", open);
-      btn.setAttribute("aria-expanded", String(open));
-    });
-  });
-  addEventListener("click", () => closeAll(null));
-  addEventListener("keydown", (e) => { if (e.key === "Escape") closeAll(null); });
 
   if (mob && mobList) {
     mobList.innerHTML = found.map((h) => cardHTML(h.p)).join("");

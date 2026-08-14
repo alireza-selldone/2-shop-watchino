@@ -239,24 +239,22 @@ export async function loadOrders(accessToken, { type = "PHYSICAL", limit = 10 } 
 /* ---------- Hero ----------
    One constant, so swapping the photograph is a one-line change.
 
-   The dial coordinates were MEASURED off the file, not eyeballed: the purple
-   dials are the only strongly purple pixels in an otherwise black-and-warm
-   frame, so locating them is a pixel search rather than a guess.
-     man's wrist   65.4% across, 57.5% down   dial is 1.14% x 2.34% of the frame
-     woman's wrist 80.7% across, 54.6% down   dial is 1.08% x 1.81%
+   Coordinates are percentages of the FILE and were MEASURED against it, not
+   eyeballed. The watches are steel now, not rose gold, so the previous purple
+   pixel-search does not apply — these came from cropping the wrist regions and
+   reading the case boxes off the crops.
 
-   709740 Bonin Amethyst Crown is the watch on the MAN's wrist. Both references
-   sit in Women's Collection in Selldone — that is the shop's own categorisation,
-   not a mislabelled card. */
+     709761 Molex Rectangular Regent  man's wrist    dial 53.9%, 70.6%
+     709762 Bonin Petite Classic      woman's wrist  dial 77.4%, 63.5%
+
+   `dot` sits on the bracelet BELOW each case, so the control never covers the
+   product. Both are percentages, so they track the object-fit crop. */
 export const HERO_IMAGE = "assets/hero-couple.png";
+export const HERO_NATURAL = { w: 1672, h: 941 };
 
 export const HERO_HOTSPOTS = [
-  /* dial   — measured centre of the purple dial, used to draw the tether
-     marker — where the button sits: 2.2% clear of a dial that is only ~1.1%
-               wide, so the control never covers the product it points at
-     side   — which way the card opens, so it never lands on the couple */
-  { id: 709740, dial: { x: 65.4, y: 57.5 }, marker: { x: 63.2, y: 60.6 }, side: "left" },
-  { id: 709734, dial: { x: 80.7, y: 54.6 }, marker: { x: 78.5, y: 57.7 }, side: "left" },
+  { id: 709761, dial: { x: 53.9, y: 70.6 }, dot: { x: 53.9, y: 74.0 } },
+  { id: 709762, dial: { x: 77.4, y: 63.5 }, dot: { x: 77.4, y: 67.0 } },
 ];
 
 /* ---------- Images ---------- */

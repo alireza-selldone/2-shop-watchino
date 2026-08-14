@@ -27,6 +27,13 @@ appear as cards below. Full reasoning in the hero section.
 **3. The hero photograph is a different register from the rest of the site.**
 It is not a bug, but it is the thing most likely to make you say "put it back".
 
+**4. The duplicate Cloudflare account's build now fails.** `2-shop-watchino` on
+account `9fcd11cc…` failed on the final commit while `watchino` succeeded. You
+told me to ignore that account, and I have — production is unaffected and serves
+the current build. But it has gone from silently duplicating every deploy to
+failing on every deploy, so its check will now show red on the repo whatever you
+push. Disconnecting it is a dashboard action.
+
 ---
 
 ## The hero markers — the briefed design could not be built

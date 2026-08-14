@@ -44,14 +44,14 @@ The visual language comes from horological instrumentation rather than from a ge
 
 <div align="center">
   <img src="docs/screenshots/shop-1440.png" width="800" alt="Shop listing with filter sidebar and product grid">
-  <br><em>Shop — four filters, logarithmic price slider, 35 references</em>
+  <br><em>Shop — four filters, logarithmic price slider, 64 references</em>
 </div>
 
 <br>
 
 <div align="center">
   <img src="docs/screenshots/product-1440.png" width="800" alt="Product page with gallery and sticky info column">
-  <br><em>Product — works for all 35 references via <code>?id=</code></em>
+  <br><em>Product — works for every reference via <code>?id=</code></em>
 </div>
 
 <br>
@@ -90,8 +90,9 @@ storefront/   →  /              the customer storefront
 dashboard/    →  /dashboard/    browser-side admin
 callback/     →  /callback/     OAuth PKCE landing
 shared/       →  shared browser modules
-scripts/      →  build-static.mjs · dev-static.mjs
+scripts/      →  build-static.mjs · dev-static.mjs · build-pages.mjs
                  audit-run.mjs · imgsweep.mjs · pagecheck.mjs · deadctl.mjs
+                 herocheck.mjs
 store-pages/  →  Markdown source for the four content pages
 dist/         →  build output (not committed)
 ```
@@ -112,7 +113,7 @@ npm run build:static        # → dist/
 
 ### Checking it
 
-The four assertions this README makes are executable. Once per machine, fetch the browser they drive — `npm install` does not, because nothing else in the repo needs it:
+The assertions this README makes are executable. Once per machine, fetch the browser they drive — `npm install` does not, because nothing else in the repo needs it:
 
 ```bash
 npx playwright install chromium
@@ -121,15 +122,16 @@ npx playwright install chromium
 Then, with the dev server running:
 
 ```bash
-npm run check               # all four
+npm run check               # all of them
 ```
 
 | | |
 |---|---|
-| `check:audit` | 10 checks × 8 pages × 11 widths, 1440 → 390 |
+| `check:audit` | 10 checks × 10 pages × 11 widths, 1440 → 390 |
 | `check:images` | no image escapes its content box; declared `aspect-ratio` actually renders |
 | `check:pages` | every footer link resolves to content that is **not** the homepage |
 | `check:controls` | no button or link without a handler or destination |
+| `check:hero` | both wrists stay in frame at 1440/1280/1024, and no scrim was added |
 
 Each takes an optional base URL, so the same checks run against a deployment:
 `node scripts/pagecheck.mjs https://watchino.selldone.shop`.
@@ -140,24 +142,26 @@ Deploys happen automatically: **Cloudflare Workers Builds** is connected to this
 
 ## The catalogue
 
-35 physical references, six collections, five makers, USD.
+64 physical references, six collections, six maker names, USD.
 
 | Collection | Refs | From |
 |---|---|---|
-| Men's Classic | 6 | $3,650 |
-| Women's Collection | 6 | $4,290 |
-| Heritage & Leather | 7 | $4,950 |
-| Sport & Chronograph | 5 | $1,888.90 |
-| Diamond & Gold | 5 | $6,198.90 |
-| Haute Horlogerie | 6 | $63,778.90 |
+| Men's Classic | 11 | $3,950 |
+| Women's Collection | 10 | $4,690 |
+| Heritage & Leather | 12 | $5,350 |
+| Sport & Chronograph | 10 | $2,088.90 |
+| Diamond & Gold | 10 | $6,598.90 |
+| Haute Horlogerie | 11 | $65,778.90 |
 
-The price range spans $1,889 to $153,889, but 29 of 35 sit under $19,000 — which is why the shop filter uses a **logarithmic** slider. A linear track buries 83% of the catalogue in the first eighth.
+The price range spans $2,089 to $153,889. A **linear** slider would put 29 of the 64 references — 45% of the catalogue — inside its first eighth, so the shop filter uses a **logarithmic** track: its midpoint lands at $17,929 rather than $77,989. The bounds are computed from the live catalogue, not written down, so they follow the shop as it grows.
+
+Counts on the site are read from the catalogue at runtime for the same reason. The numbers in this table are the only place they are written by hand.
 
 ---
 
 ## Things worth knowing before you change anything
 
-**No invented data.** Product reviews are driven by real ratings, which are currently zero across all 35 references, so the block shows an honest empty state. Specifications come from the real `spec` field. There are no fabricated calibers, reviewers, or colour names anywhere.
+**No invented data.** Product reviews are driven by real ratings, which are currently zero across the whole catalogue, so the block shows an honest empty state. Specifications come from the real `spec` field. There are no fabricated calibers, reviewers, or colour names anywhere.
 
 **Images are contained, not cropped.** Every image sits inside its box via `object-fit: contain`, and `scripts/imgsweep.mjs` asserts it — both that no image overflows its container's content box, and that any element declaring `aspect-ratio` actually renders at it. That second assertion exists because the first one alone missed a real bug where the container itself had stretched.
 

@@ -11,6 +11,7 @@
    usage: node imgsweep.mjs [baseUrl]
 */
 import { chromium } from "playwright";
+const NL = String.fromCharCode(10);
 
 const BASE = process.argv[2] || "http://localhost:8788";
 const local = BASE.includes("localhost");
@@ -149,6 +150,40 @@ for (const id of ids) {
   const name = await p.evaluate(() => document.querySelector("#pdp h1")?.textContent?.slice(0, 24) || "?");
   report(`${id} ${name}`, await p.evaluate(MEASURE));
 }
+
+/* ---- negative control -----------------------------------------------------
+   Both assertions run against deliberately broken DOM. If either fails to report
+   a problem, the sweep is not measuring and the run aborts — a green result from
+   a check that cannot go red is worse than no check at all. */
+console.log(NL + "  --- negative control ---");
+await p.goto(BASE + "/", { waitUntil: "domcontentloaded" });
+await p.waitForSelector("#catgrid .cat");
+const control = await p.evaluate((src) => {
+  const M = eval("(" + src + ")");
+  const host = document.createElement("div");
+  host.style.cssText = "position:fixed;left:0;top:0;width:120px;height:120px;padding:4px;";
+  const img = document.createElement("img");
+  img.src = document.images[0] ? document.images[0].src : "";
+  img.style.cssText = "width:400px;height:400px;max-width:none;";
+  host.appendChild(img);
+  const ratio = document.createElement("div");
+  ratio.style.cssText = "position:fixed;left:0;top:220px;width:300px;height:100px;aspect-ratio:1/1;";
+  document.body.append(host, ratio);
+  const r = M();
+  host.remove(); ratio.remove();
+  return r;
+}, MEASURE.toString());
+
+const sawOverflow = (control.imgs || []).some((i) => i.fail);
+const sawRatio = (control.ratioBreaks || []).length > 0;
+console.log("  overflowing image detected  : " + (sawOverflow ? "yes" : "NO"));
+console.log("  broken aspect-ratio detected: " + (sawRatio ? "yes" : "NO"));
+if (!sawOverflow || !sawRatio) {
+  console.log(NL + "NEGATIVE CONTROL FAILED — this sweep proves nothing. Aborting.");
+  await b.close();
+  process.exit(2);
+}
+console.log("  both assertions can fail, so a pass means something");
 
 await b.close();
 console.log(`\n${checked} images checked, ${failed} exceeding their container content box`);

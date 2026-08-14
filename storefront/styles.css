@@ -344,12 +344,9 @@ html.is-locked,html.is-locked body{overflow:hidden;height:100%;}
   display:grid;grid-template-columns:1fr 1fr;gap:56px;align-items:center;
   width:100%;padding-block:80px;
 }
-.hero__art{position:relative;display:grid;place-items:center;}
-.hero__art::before{
-  content:"";position:absolute;width:118%;aspect-ratio:1;border-radius:50%;
-  background:radial-gradient(circle,rgba(47,78,143,.30) 0%,rgba(47,78,143,0) 62%);
-}
-.hero__art img{position:relative;max-height:min(66vh,620px);width:auto;object-fit:contain;}
+.hero__art{display:none;}
+
+
 .hero h1{margin:0 0 26px;}
 .hero__cta{display:flex;gap:26px;align-items:center;margin-top:40px;flex-wrap:wrap;}
 
@@ -366,11 +363,11 @@ html.is-locked,html.is-locked body{overflow:hidden;height:100%;}
 @media (max-width:900px){
   .hero{min-height:auto;}
   .hero__grid{grid-template-columns:1fr;gap:36px;padding-block:56px 64px;text-align:center;}
-  .hero__art{order:-1;}
-  .hero__art img{max-height:46vh;}
+  .hero__art{display:none;}
+  
   /* Stacked, .hero__art spans the full width, so a halo at 118% of it balloons
      to ~1000px and washes over the headline below. Tie it to the image. */
-  .hero__art::before{width:min(118%,520px);}
+  
   .hero .lede{margin-inline:auto;}
   .hero__cta,.sweep{justify-content:center;}
 }
@@ -651,10 +648,7 @@ html.is-locked,html.is-locked body{overflow:hidden;height:100%;}
 .tier__art img,
 .spot__art img,
 .edit__art img,
-.hero__art img{
-  object-fit:contain;
-  max-width:100%;
-}
+
 
 /* ---------- Utility ---------- */
 .mt0{margin-top:0;}.mb0{margin-bottom:0;}
@@ -1063,3 +1057,84 @@ html.js-reveal .reveal.is-in{opacity:1;transform:none;}
 
 @media (max-width:1023px){ .posts{grid-template-columns:repeat(2,1fr);} }
 @media (max-width:640px){ .posts{grid-template-columns:1fr;gap:36px;} }
+
+
+/* --- Hero: photograph ------------------------------------------------------
+   The frame is black across its left ~40%, which is where the copy sits. There
+   is deliberately NO gradient scrim: if the text ever needed one, the crop has
+   drifted and the crop is what should be fixed.
+
+   object-position is set so BOTH wrists stay in frame. The measured dials are
+   at 65.4% and 80.7% across, so the right edge is the constraint — as the
+   viewport narrows, cover crops the sides and the woman's wrist leaves first.
+   Holding the crop right-of-centre keeps both until the layout switches. */
+.hero{position:relative;min-height:92vh;display:flex;align-items:center;overflow:hidden;}
+.hero__media{position:absolute;inset:0;z-index:0;}
+.hero__media img{
+  width:100%;height:100%;object-fit:cover;object-position:72% 50%;
+  /* the source is already near-black at the left; nothing is painted over it */
+}
+.hero__grid{position:relative;z-index:2;width:100%;}
+.hero__copy{max-width:34rem;}
+
+@media (min-width:1024px){ .hero__media img{object-position:68% 50%;} }
+@media (min-width:1440px){ .hero__media img{object-position:60% 50%;} }
+
+/* --- Hero hotspots --------------------------------------------------------- */
+.hero__spots{position:absolute;inset:0;z-index:3;}
+.hero__spot{position:absolute;transform:translate(-50%,-50%);}
+.hero__pin{
+  width:var(--tap);height:var(--tap);border-radius:50%;
+  display:grid;place-items:center;color:var(--dial);
+  background:rgba(22,25,29,.42);border:1px solid rgba(233,236,238,.55);
+  backdrop-filter:blur(2px);
+  transition:background var(--fast) var(--ease),border-color var(--fast) var(--ease),transform var(--fast) var(--ease);
+}
+.hero__pin span{font-size:19px;line-height:1;transform:translateY(-1px);}
+.hero__pin:hover,.hero__pin:focus-visible{background:var(--blued);border-color:var(--blued);transform:scale(1.06);}
+
+.hero__card{
+  position:absolute;left:50%;bottom:calc(100% + 12px);transform:translateX(-50%) translateY(6px);
+  width:264px;display:flex;gap:14px;align-items:center;
+  background:var(--dial-pure);color:var(--graphite);
+  border:1px solid var(--rule);border-radius:var(--radius);padding:12px;
+  opacity:0;visibility:hidden;pointer-events:none;
+  transition:opacity var(--fast) var(--ease),transform var(--fast) var(--ease),visibility var(--fast);
+}
+.hero__spot.is-on .hero__card{opacity:1;visibility:visible;transform:translateX(-50%) translateY(0);}
+.hero__card__art{width:64px;height:64px;flex:0 0 64px;background:var(--dial);position:relative;overflow:hidden;}
+.hero__card__art img{position:absolute;inset:4px;width:calc(100% - 8px);height:calc(100% - 8px);object-fit:contain;}
+.hero__card__txt{display:flex;flex-direction:column;gap:3px;min-width:0;}
+.hero__card__name{font-family:var(--display);font-size:15px;line-height:1.2;}
+.hero__card__cta{font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:var(--blued);}
+/* Spots near the right edge would push their card off-screen. */
+.hero__spot:last-child .hero__card{left:auto;right:0;transform:translateX(0) translateY(6px);}
+.hero__spot:last-child.is-on .hero__card{transform:translateX(0) translateY(0);}
+
+@media (prefers-reduced-motion:reduce){
+  .hero__pin,.hero__card{transition:none;}
+  .hero__pin:hover,.hero__pin:focus-visible{transform:none;}
+}
+
+/* --- Hero below 768 --------------------------------------------------------
+   A 16:9 frame is ~219px tall at 390px wide, and the wrists are 15% of the
+   frame apart — no portrait crop holds both. So the photograph becomes a 4:5
+   crop centred on the couple, the hotspots are not rendered, and the two
+   references appear as ordinary cards underneath. */
+@media (max-width:767px){
+  .hero{min-height:0;display:block;}
+  .hero__media{position:relative;aspect-ratio:4/5;}
+  .hero__media img{object-position:74% 42%;}
+  .hero__grid{padding-block:40px 8px;}
+  .hero__spots{display:none;}
+  .heromob .pgrid{grid-template-columns:repeat(2,1fr);gap:18px;}
+}
+
+/* Inline text button that reads as a link but is a real <button>. */
+.linkish{color:var(--blued);text-decoration:underline;text-underline-offset:3px;font:inherit;
+  min-height:var(--tap);min-width:var(--tap);padding:0 2px;}
+.linkish:hover{color:var(--blued-lift);}
+
+/* Load more. A button, not infinite scroll — the footer carries seven real
+   destinations and infinite scroll takes it away from people. */
+.loadmore{display:flex;flex-direction:column;align-items:center;gap:14px;padding:52px 0 8px;}

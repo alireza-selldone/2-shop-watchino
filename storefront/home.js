@@ -3,7 +3,7 @@
    Every image resolves from live XAPI through the central Selldone helper;
    the prototype's hardcoded CDN URLs are gone (5 of its 6 were 404). */
 
-import { loadCatalog, money, byId, catOf, loadReviews } from "./watchino-data.js";
+import { loadCatalog, money, byId, catOf, loadReviews, HERO_IMAGE, HERO_HOTSPOTS } from "./watchino-data.js";
 import { cardHTML, esc } from "./app.js";
 
 /* ==========================================================================
@@ -116,12 +116,21 @@ function fillHome(cat) {
     if (el && p) { el.src = p.image; el.alt = alt || p.name; }
   };
 
-  /* ---- Hero. The reference is named "Skeleton" but photographs as a closed
-     Roman-numeral dial, so the copy describes what is actually in frame. ---- */
-  const heroRef = byId(cat, 709403);
-  setImg("[data-hero-img]", heroRef, "PrestigeAero wristwatch: Roman-numeral dial on a hand-stitched alligator strap");
+  /* ---- Hero ---------------------------------------------------------- */
+  const heroImg = document.querySelector("[data-hero-img]");
+  if (heroImg) {
+    heroImg.src = HERO_IMAGE;
+    heroImg.alt = "A couple in evening dress, each wearing a rose gold watch with a purple dial";
+  }
   const heroLink = document.querySelector("[data-hero-link]");
+  const heroRef = byId(cat, 709403);
   if (heroLink && heroRef) heroLink.href = `product.html?id=${heroRef.id}`;
+  fillHotspots(cat);
+
+  // Counts come from the catalogue so they cannot drift when it grows.
+  document.querySelectorAll("[data-all-refs]").forEach((a) => {
+    a.textContent = `All ${cat.products.length} references →`;
+  });
 
   /* ---- Six collections — the heart of the page ---- */
   const grid = document.getElementById("catgrid");
@@ -194,6 +203,74 @@ function fillHome(cat) {
 
   /* ---- Client care editorial ---- */
   setImg("[data-service-img]", byId(cat, 709384), "Leather-strap wristwatch on the workbench");
+}
+
+/* ---------- Hero hotspots ----------
+   Resolved from the live catalogue by id: the name and price are never written
+   into the markup, so neither can go stale.
+
+   Hover and focus reveal the same card — hover-only would make the whole
+   feature invisible to a keyboard. Below 768 the spots are not rendered at all
+   and the same references appear as ordinary cards instead. */
+const MOBILE = () => matchMedia("(max-width: 767px)").matches;
+
+function fillHotspots(cat) {
+  const layer = document.querySelector("[data-hero-spots]");
+  const mob = document.querySelector("[data-hero-mob]");
+  const mobList = document.querySelector("[data-hero-mob-list]");
+  if (!layer) return;
+
+  const found = HERO_HOTSPOTS
+    .map((h) => ({ ...h, p: byId(cat, h.id) }))
+    .filter((h) => h.p);            // a delisted reference simply drops out
+
+  if (!found.length) { layer.hidden = true; if (mob) mob.hidden = true; return; }
+
+  const draw = () => {
+    if (MOBILE()) {
+      layer.hidden = true;
+      layer.innerHTML = "";
+      if (mob && mobList) {
+        mobList.innerHTML = found.map((h) => cardHTML(h.p)).join("");
+        mob.hidden = false;
+      }
+      return;
+    }
+    if (mob) mob.hidden = true;
+    layer.hidden = false;
+    layer.innerHTML = found.map((h) => `
+      <div class="hero__spot" style="left:${h.x}%;top:${h.y}%">
+        <button class="hero__pin" type="button"
+                aria-label="${esc(h.p.name)}, ${money(h.p.price)} — view reference"
+                aria-expanded="false" data-goto="product.html?id=${h.p.id}">
+          <span aria-hidden="true">+</span>
+        </button>
+        <span class="hero__card" role="presentation">
+          <span class="hero__card__art"><img src="${h.p.image}" alt="" loading="lazy" width="120" height="120"></span>
+          <span class="hero__card__txt">
+            <span class="hero__card__name">${esc(h.p.name)}</span>
+            <span class="price">${money(h.p.price)}</span>
+            <span class="hero__card__cta">View reference →</span>
+          </span>
+        </span>
+      </div>`).join("");
+
+    layer.querySelectorAll(".hero__pin").forEach((btn) => {
+      const spot = btn.closest(".hero__spot");
+      const open = (v) => {
+        spot.classList.toggle("is-on", v);
+        btn.setAttribute("aria-expanded", String(v));
+      };
+      btn.addEventListener("focus", () => open(true));
+      btn.addEventListener("blur", () => open(false));
+      btn.addEventListener("mouseenter", () => open(true));
+      spot.addEventListener("mouseleave", () => open(false));
+      btn.addEventListener("click", () => { location.href = btn.dataset.goto; });
+    });
+  };
+
+  draw();
+  addEventListener("resize", draw);
 }
 
 /* ---------- Reviews ----------

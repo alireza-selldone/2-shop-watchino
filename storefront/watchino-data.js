@@ -212,6 +212,46 @@ export async function loadArticle({ blogId, slug }) {
   };
 }
 
+/* ---------- Order history ----------
+   xapi.checkout.order_history.list — GET /shops/@{shop}/basket/orders-{type}
+   with the order-history scope, which the storefront client already holds.
+   This shop is physical-only, so the type is PHYSICAL. */
+export async function loadOrders(accessToken, { type = "PHYSICAL", limit = 10 } = {}) {
+  if (!accessToken) return null;
+  const url = `${SHOP.xapi}/shops/@${SHOP.handle}/basket/orders-${type}?offset=0&limit=${limit}`;
+  const r = await fetch(url, {
+    headers: { Accept: "application/json", Authorization: `Bearer ${accessToken}` },
+  });
+  if (!r.ok) throw new Error(`orders ${r.status}`);
+  const j = await r.json();
+  if (j?.error) throw new Error(j.error_msg || "Order history unavailable");
+  const rows = j.baskets || j.orders || j.data || [];
+  return rows.map((o) => ({
+    id: o.id,
+    date: o.created_at || o.reserved_at || null,
+    status: o.status || o.delivery_state || "",
+    total: Number(o.price ?? o.total ?? 0),
+    currency: o.currency || "USD",
+    items: Number(o.items_count ?? (o.items || []).length ?? 0),
+  }));
+}
+
+/* ---------- Hero ----------
+   One constant, so swapping the photograph is a one-line change.
+
+   The hotspot coordinates were MEASURED off the file, not eyeballed: the purple
+   dials are the only strongly purple pixels in an otherwise black-and-warm
+   frame, so locating them is a pixel search rather than a guess.
+     man   65.4% across, 57.5% down
+     woman 80.7% across, 54.6% down
+   They are percentages so they track the image as object-fit crops it. */
+export const HERO_IMAGE = "assets/hero-couple.png";
+
+export const HERO_HOTSPOTS = [
+  { id: 709734, x: 65.4, y: 57.5, wrist: "left" },
+  { id: 709740, x: 80.7, y: 54.6, wrist: "right" },
+];
+
 /* ---------- Images ---------- */
 export function img(path, size) {
   return selldoneImagePathToUrl(path, { shopId: SHOP.id, scope: "products", size });
@@ -229,7 +269,7 @@ export const money = (n) =>
    dis_start/dis_end window that closed on 2024-11-27. Reading the raw field
    would advertise a reduction that no longer exists and would put nearly the
    whole catalogue on sale. Validated against the server's own final_price:
-   agrees on 35/35. */
+   agrees on every reference. */
 export function activeDiscount(p, now = Date.now()) {
   if (!(Number(p.discount) > 0)) return 0;
   if (p.dis_start && now < Date.parse(p.dis_start)) return 0;
@@ -245,7 +285,7 @@ export const wasPrice = (p) => (activeDiscount(p) > 0 ? Number(p.price) : null);
    ordinal, so colour is never the only indicator.
 
    Composite colours such as "#7B1FA2/#D32F2F" are not valid CSS colours and are
-   rendered as a hard 135deg split. 13 of the 35 references carry one. */
+   rendered as a hard 135deg split; a large minority of references carry one. */
 export const isComposite = (c) => typeof c === "string" && c.includes("/");
 
 export function swatchStyle(color) {

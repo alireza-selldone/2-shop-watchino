@@ -11,11 +11,12 @@
     "preview": "npm run preview:static",
     "preview:static": "npm run build:static && node scripts/dev-static.mjs --dist",
     "start": "npm run dev:static",
-    "check": "npm run check:audit && npm run check:images && npm run check:pages && npm run check:controls",
+    "check": "npm run check:audit && npm run check:images && npm run check:pages && npm run check:controls && npm run check:hero",
     "check:audit": "node scripts/audit-run.mjs",
     "check:images": "node scripts/imgsweep.mjs",
     "check:pages": "node scripts/pagecheck.mjs",
-    "check:controls": "node scripts/deadctl.mjs"
+    "check:controls": "node scripts/deadctl.mjs",
+    "check:hero": "node scripts/herocheck.mjs"
   },
   "private": true,
   "type": "module",

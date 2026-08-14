@@ -6,7 +6,7 @@ import {
   loadCatalog, money, img, catOf, byId,
   swatchStyle, swatchLabel, isComposite,
   readBag, addToBag, removeFromBag, bagCount, bagLines, bagSubtotal,
-  subscribe,
+  subscribe, loadOrders,
 } from "./watchino-data.js";
 import { storefrontAuth } from "../shared/auth-client.js";
 
@@ -20,7 +20,7 @@ export function cardHTML(p) {
     </div>
     <p class="eyebrow" style="margin-bottom:6px">${esc(p.catName)}</p>
     <span class="pcard__name">${esc(p.name)}</span>
-    <p class="price mb0">${money(p.price)}</p>
+    <p class="price mb0">${p.range?.varies ? `<span class="price__from">from</span> ${money(p.range.from)}` : money(p.price)}</p>
   </a>`;
 }
 
@@ -302,7 +302,7 @@ function initNewsletter() {
 
 /* ---------- Search ---------- */
 /* Client-side over the catalogue already in memory, matching the reference app.
-   35 references do not justify a network round-trip per keystroke, and the
+   a catalogue this size does not justify a round-trip per keystroke, and the
    storefront has the whole list loaded before the button can be clicked. */
 function initSearch() {
   const sheet = document.querySelector(".sheet--search");
@@ -349,9 +349,14 @@ function initSearch() {
 }
 
 /* ---------- Account ---------- */
-/* Authorization Code + PKCE against selldone.com/oauth, public client. The
-   session is read through storefrontAuth directly: the /api/storefront/* shim
-   only ever translated a fake path into this call. */
+/* Authorization Code + PKCE, public client. Customer-facing copy never names
+   Selldone: the customer is signing in to Watchino. Selldone is our
+   infrastructure, not the shop's brand.
+
+   Nothing raw is ever shown to a visitor. A failure gets a plain sentence here
+   and the detail goes to the console — a stale-cache invalid_client once
+   reached the panel as a JSON dump, which told the visitor nothing and hid the
+   one line that would have identified it immediately. */
 async function renderAccount() {
   const body = document.querySelector("[data-account-body]");
   if (!body) return;
@@ -363,7 +368,7 @@ async function renderAccount() {
   } catch (err) {
     console.error("[watchino] session lookup failed", err);
     body.innerHTML = `<div class="acct">
-      <p class="lede" style="margin-bottom:20px">Your session could not be checked just now.</p>
+      <p class="lede" style="margin-bottom:20px">We could not check whether you are signed in. Try again in a moment.</p>
       <button class="btn btn--full" type="button" data-signin>Sign in</button>
     </div>`;
     wire(body);
@@ -373,13 +378,17 @@ async function renderAccount() {
   if (!s.authenticated) {
     body.innerHTML = `<div class="acct">
       <p class="lede" style="margin-bottom:8px">Sign in to see your orders and saved addresses.</p>
-      <p class="cap" style="margin-bottom:24px">Watchino uses your Selldone account. This is a demonstration storefront — no order is ever placed.</p>
-      <button class="btn btn--full" type="button" data-signin>Sign in with Selldone</button>
+      <p class="cap" style="margin-bottom:24px">Use your email address. This is a demonstration storefront — no order is ever placed.</p>
+      <button class="btn btn--full" type="button" data-signin>Sign in</button>
+      <p class="cap center" style="margin-top:14px">New here? <button class="linkish" type="button" data-signin>Create account</button></p>
     </div>`;
     wire(body);
     return;
   }
 
+  /* Name and avatar, order history, sign out. Nothing else — the email sat under
+     the name AND in a row of its own, and a "Shop" row interpolated an object
+     into a template and rendered [object Object]. */
   const u = s.user || {};
   body.innerHTML = `<div class="acct">
     <div class="acct__id">
@@ -389,20 +398,41 @@ async function renderAccount() {
         ${u.email ? `<span class="cap" style="display:block">${esc(u.email)}</span>` : ""}
       </span>
     </div>
-    ${u.email ? `<div class="acct__row"><span>Email</span><span>${esc(u.email)}</span></div>` : ""}
-    <div class="acct__row"><span>Shop</span><span>${esc(s.shop || "Watchino")}</span></div>
-    <p class="cap" style="margin:22px 0">Order history is not part of this demonstration.</p>
+    <div data-orders><p class="cap" style="margin:22px 0">Loading your orders…</p></div>
     <button class="btn btn--line btn--full" type="button" data-signout>Sign out</button>
   </div>`;
   wire(body);
+  renderOrders(body.querySelector("[data-orders]"), s.accessToken);
+}
 
-  function wire(root) {
-    root.querySelector("[data-signin]")?.addEventListener("click", (e) => {
+/* Real order history. An empty list says so; a failure says so plainly and logs
+   the reason. Neither pretends the feature does not exist. */
+async function renderOrders(host, token) {
+  if (!host) return;
+  try {
+    const orders = await loadOrders(token);
+    if (!orders || !orders.length) {
+      host.innerHTML = `<p class="cap" style="margin:22px 0">No orders yet.</p>`;
+      return;
+    }
+    host.innerHTML = `<p class="eyebrow" style="margin:24px 0 10px">Your orders</p>` +
+      orders.map((o) => `<div class="acct__row">
+        <span>${o.date ? new Date(o.date).toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" }) : `Order ${o.id}`}${o.status ? ` · ${esc(o.status)}` : ""}</span>
+        <span class="price">${money(o.total)}</span>
+      </div>`).join("");
+  } catch (err) {
+    console.error("[watchino] order history failed", err);
+    host.innerHTML = `<p class="cap" style="margin:22px 0">Your orders could not be loaded just now.</p>`;
+  }
+}
+
+function wire(root) {
+  root.querySelectorAll("[data-signin]").forEach((b) =>
+    b.addEventListener("click", (e) => {
       e.currentTarget.disabled = true;
       storefrontAuth.startLogin(location.pathname + location.search);
-    });
-    root.querySelector("[data-signout]")?.addEventListener("click", () => storefrontAuth.logout(location.pathname));
-  }
+    }));
+  root.querySelector("[data-signout]")?.addEventListener("click", () => storefrontAuth.logout(location.pathname));
 }
 
 /* Reflect the signed-in state on the header button without opening the sheet,

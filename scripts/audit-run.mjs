@@ -1,4 +1,16 @@
 import { chromium } from "playwright";
+import { readFileSync } from "node:fs";
+import { dirname, join } from "node:path";
+import { fileURLToPath } from "node:url";
+
+/* _audit.js is deliberately NOT deployed — it must not be publicly reachable —
+   so importing it from the page only works locally. Injecting its source
+   instead lets the same checks run against any deployment without shipping the
+   harness. The `export` keyword is stripped so it evaluates as a plain script. */
+const AUDIT_SRC = readFileSync(
+  join(dirname(fileURLToPath(import.meta.url)), "..", "storefront", "_audit.js"),
+  "utf8",
+).replace(/^export\s+/gm, "");
 /* Base URL is argv[2], so this runs against a preview or the live site
    as well as the local dev server: node scripts/audit-run.mjs https://… */
 
@@ -55,7 +67,7 @@ for(const w of WIDTHS){
       for(let y=0;y<document.documentElement.scrollHeight;y+=s){scrollTo(0,y);await new Promise(r=>setTimeout(r,110));}
       scrollTo(0,0);await new Promise(r=>setTimeout(r,300));});
     await p.waitForTimeout(300);
-    const r=await p.evaluate(async()=>(await import("/_audit.js?v=pw2")).audit());
+    const r=await p.evaluate((src)=>{ eval(src); return audit(); }, AUDIT_SRC);
     if(errs.length) r.failures.push({check:"console-or-request-error",detail:errs.slice(0,3)});
     r.pass=r.failures.length===0;
     if(!r.pass) allPass=false;

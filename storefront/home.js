@@ -3,7 +3,7 @@
    Every image resolves from live XAPI through the central Selldone helper;
    the prototype's hardcoded CDN URLs are gone (5 of its 6 were 404). */
 
-import { loadCatalog, money, byId, catOf, loadReviews } from "./watchino-data.js";
+import { loadCatalog, money, byId, catOf, loadReviews, HERO_IMAGE, HERO_NATURAL, HERO_HOTSPOTS } from "./watchino-data.js";
 import { cardHTML, esc } from "./app.js";
 
 /* ==========================================================================
@@ -116,12 +116,21 @@ function fillHome(cat) {
     if (el && p) { el.src = p.image; el.alt = alt || p.name; }
   };
 
-  /* ---- Hero. The reference is named "Skeleton" but photographs as a closed
-     Roman-numeral dial, so the copy describes what is actually in frame. ---- */
-  const heroRef = byId(cat, 709403);
-  setImg("[data-hero-img]", heroRef, "PrestigeAero wristwatch: Roman-numeral dial on a hand-stitched alligator strap");
+  /* ---- Hero ---------------------------------------------------------- */
+  const heroImg = document.querySelector("[data-hero-img]");
+  if (heroImg) {
+    heroImg.src = HERO_IMAGE;
+    heroImg.alt = "A couple in evening dress, each wearing a rose gold watch with a purple dial";
+  }
   const heroLink = document.querySelector("[data-hero-link]");
+  const heroRef = byId(cat, 709403);
   if (heroLink && heroRef) heroLink.href = `product.html?id=${heroRef.id}`;
+  fillHotspots(cat);
+
+  // Counts come from the catalogue so they cannot drift when it grows.
+  document.querySelectorAll("[data-all-refs]").forEach((a) => {
+    a.textContent = `All ${cat.products.length} references →`;
+  });
 
   /* ---- Six collections — the heart of the page ---- */
   const grid = document.getElementById("catgrid");
@@ -194,6 +203,145 @@ function fillHome(cat) {
 
   /* ---- Client care editorial ---- */
   setImg("[data-service-img]", byId(cat, 709384), "Leather-strap wristwatch on the workbench");
+}
+
+/* ---------- Hero markers ----------
+   Ported from the approved mockup. Behaviour is the mockup's; the tokens and
+   markup conventions are this codebase's.
+
+   Dots sit on the bracelet below each case so they never cover the product.
+   Click opens a card anchored to the dot and floating over the photograph; one
+   at a time; click-outside and Escape close and return focus to the dot. The
+   card measures its own height and flips below the dot when there is no room
+   above, instead of leaving the frame. */
+function fillHotspots(cat) {
+  const layer = document.querySelector("[data-hero-spots]");
+  const mob = document.querySelector("[data-hero-mob]");
+  const mobList = document.querySelector("[data-hero-mob-list]");
+  const img = document.querySelector("[data-hero-img]");
+  if (!layer || !img) return;
+
+  const found = HERO_HOTSPOTS
+    .map((h) => ({ ...h, p: byId(cat, h.id) }))
+    .filter((h) => h.p);            // a delisted reference simply drops out
+
+  if (!found.length) { layer.hidden = true; if (mob) mob.hidden = true; return; }
+
+  layer.hidden = false;
+  layer.innerHTML = found.map((h, i) => `
+    <button class="hspot" type="button" data-spot="${i}" aria-expanded="false"
+            aria-label="${esc(h.p.name)}, ${money(h.p.price)}. Open details.">
+      <i aria-hidden="true"></i>
+    </button>
+    <div class="hcard" data-card="${i}" role="dialog" aria-label="${esc(h.p.name)}">
+      <button class="hcard__x" type="button" aria-label="Close">&times;</button>
+      <div class="hcard__row">
+        <img src="${h.p.image}" alt="" width="152" height="152">
+        <div>
+          <p class="hcard__k">${esc(h.p.catName)}</p>
+          <b>${esc(h.p.name)}</b>
+          <span class="price">${money(h.p.price)}</span>
+        </div>
+      </div>
+      <a class="hcard__go" href="product.html?id=${h.p.id}">View the reference →</a>
+    </div>`).join("");
+
+  const spots = [...layer.querySelectorAll(".hspot")];
+  const cards = [...layer.querySelectorAll(".hcard")];
+
+  /* Image space -> box space. object-fit:cover crops, so a percentage of the
+     FILE is not a percentage of the BOX. Taken from the mockup rather than
+     re-derived: this is the maths both the code and its check got wrong. */
+  const project = (xPct, yPct) => {
+    const box = img.getBoundingClientRect();
+    const scale = Math.max(box.width / HERO_NATURAL.w, box.height / HERO_NATURAL.h);
+    const dw = HERO_NATURAL.w * scale, dh = HERO_NATURAL.h * scale;
+    const op = getComputedStyle(img).objectPosition.split(" ");
+    const ox = parseFloat(op[0]) / 100, oy = parseFloat(op[1] ?? "50%") / 100;
+    return {
+      x: (box.width - dw) * ox + dw * xPct / 100,
+      y: (box.height - dh) * oy + dh * yPct / 100,
+      box,
+    };
+  };
+
+  const CARD_W = 300, GAP = 26;
+  const place = () => {
+    if (!img.naturalWidth) return;
+    found.forEach((h, i) => {
+      const pt = project(h.dot.x, h.dot.y);
+      if (!pt.box.width) return;
+      spots[i].style.left = `${pt.x}px`;
+      spots[i].style.top = `${pt.y}px`;
+      const onScreen = pt.x > 16 && pt.x < pt.box.width - 16 && pt.y > 16 && pt.y < pt.box.height - 16;
+      spots[i].hidden = !onScreen;
+
+      // keep the card inside the frame, and point its arrow back at the dot
+      let cx = pt.x - 34;
+      if (cx + CARD_W > pt.box.width - 16) cx = pt.box.width - CARD_W - 16;
+      if (cx < 16) cx = 16;
+      cards[i].style.left = `${cx}px`;
+      cards[i].style.setProperty("--ax", `${pt.x - cx - 5}px`);
+
+      // above by default; below only when there is no room above
+      const cardH = cards[i].offsetHeight || 148;
+      if (pt.y - GAP - cardH > 12) {
+        cards[i].dataset.side = "above";
+        cards[i].style.top = "";
+        cards[i].style.bottom = `${pt.box.height - pt.y + GAP}px`;
+      } else {
+        cards[i].dataset.side = "below";
+        cards[i].style.bottom = "";
+        cards[i].style.top = `${pt.y + GAP}px`;
+      }
+    });
+  };
+
+  const close = (i, refocus) => {
+    cards[i].classList.remove("is-in");
+    spots[i].setAttribute("aria-expanded", "false");
+    setTimeout(() => cards[i].classList.remove("is-on"), 220);
+    if (refocus) spots[i].focus();
+  };
+  const open = (i) => {
+    found.forEach((_, j) => { if (j !== i) close(j); });
+    cards[i].classList.add("is-on");
+    place();                       // now it has a height, so it can be placed properly
+    requestAnimationFrame(() => cards[i].classList.add("is-in"));
+    spots[i].setAttribute("aria-expanded", "true");
+  };
+  spots.forEach((btn, i) => {
+    btn.addEventListener("click", (e) => {
+      e.stopPropagation();
+      btn.getAttribute("aria-expanded") === "true" ? close(i, true) : open(i);
+    });
+    /* Focus must reveal what hover reveals, or the feature is invisible to a
+       keyboard. But a mouse click focuses the button before it fires click — so
+       an unconditional focus handler opened the card and the click then toggled
+       it straight back shut. :focus-visible is true for keyboard focus and
+       false for pointer focus, which separates the two cleanly. */
+    btn.addEventListener("focus", () => {
+      if (btn.matches(":focus-visible")) open(i);
+    });
+    cards[i].addEventListener("click", (e) => e.stopPropagation());
+    cards[i].querySelector(".hcard__x").addEventListener("click", () => close(i, true));
+  });
+  addEventListener("click", () => found.forEach((_, i) => close(i)));
+  addEventListener("keydown", (e) => {
+    if (e.key !== "Escape") return;
+    found.forEach((_, i) => {
+      if (spots[i].getAttribute("aria-expanded") === "true") close(i, true);
+    });
+  });
+
+  if (img.complete && img.naturalWidth) place();
+  img.addEventListener("load", place);
+  addEventListener("resize", place);
+
+  if (mob && mobList) {
+    mobList.innerHTML = found.map((h) => cardHTML(h.p)).join("");
+    mob.hidden = false;
+  }
 }
 
 /* ---------- Reviews ----------

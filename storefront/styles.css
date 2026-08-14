@@ -344,12 +344,9 @@ html.is-locked,html.is-locked body{overflow:hidden;height:100%;}
   display:grid;grid-template-columns:1fr 1fr;gap:56px;align-items:center;
   width:100%;padding-block:80px;
 }
-.hero__art{position:relative;display:grid;place-items:center;}
-.hero__art::before{
-  content:"";position:absolute;width:118%;aspect-ratio:1;border-radius:50%;
-  background:radial-gradient(circle,rgba(47,78,143,.30) 0%,rgba(47,78,143,0) 62%);
-}
-.hero__art img{position:relative;max-height:min(66vh,620px);width:auto;object-fit:contain;}
+.hero__art{display:none;}
+
+
 .hero h1{margin:0 0 26px;}
 .hero__cta{display:flex;gap:26px;align-items:center;margin-top:40px;flex-wrap:wrap;}
 
@@ -366,11 +363,11 @@ html.is-locked,html.is-locked body{overflow:hidden;height:100%;}
 @media (max-width:900px){
   .hero{min-height:auto;}
   .hero__grid{grid-template-columns:1fr;gap:36px;padding-block:56px 64px;text-align:center;}
-  .hero__art{order:-1;}
-  .hero__art img{max-height:46vh;}
+  .hero__art{display:none;}
+  
   /* Stacked, .hero__art spans the full width, so a halo at 118% of it balloons
      to ~1000px and washes over the headline below. Tie it to the image. */
-  .hero__art::before{width:min(118%,520px);}
+  
   .hero .lede{margin-inline:auto;}
   .hero__cta,.sweep{justify-content:center;}
 }
@@ -651,10 +648,7 @@ html.is-locked,html.is-locked body{overflow:hidden;height:100%;}
 .tier__art img,
 .spot__art img,
 .edit__art img,
-.hero__art img{
-  object-fit:contain;
-  max-width:100%;
-}
+
 
 /* ---------- Utility ---------- */
 .mt0{margin-top:0;}.mb0{margin-bottom:0;}
@@ -1063,3 +1057,211 @@ html.js-reveal .reveal.is-in{opacity:1;transform:none;}
 
 @media (max-width:1023px){ .posts{grid-template-columns:repeat(2,1fr);} }
 @media (max-width:640px){ .posts{grid-template-columns:1fr;gap:36px;} }
+
+
+/* --- Hero: photograph ------------------------------------------------------
+   The frame is black across its left ~40%, which is where the copy sits. There
+   is deliberately NO gradient scrim: if the text ever needed one, the crop has
+   drifted and the crop is what should be fixed.
+
+   object-position is set so BOTH wrists stay in frame. The measured dials are
+   at 65.4% and 80.7% across, so the right edge is the constraint — as the
+   viewport narrows, cover crops the sides and the woman's wrist leaves first.
+   Holding the crop right-of-centre keeps both until the layout switches. */
+.hero{position:relative;min-height:92vh;display:flex;align-items:center;overflow:hidden;}
+.hero__media{position:absolute;inset:0;z-index:0;}
+.hero__media img{
+  width:100%;height:100%;object-fit:cover;object-position:72% 50%;
+  /* the source is already near-black at the left; nothing is painted over it */
+}
+/* The copy layer spans the full hero, so left to itself it intercepts clicks
+   destined for a marker. Only the copy column should take pointer events. */
+.hero__grid{position:relative;z-index:2;width:100%;pointer-events:none;}
+.hero__copy{pointer-events:auto;}
+.hero__copy{max-width:34rem;}
+
+/* Re-derived for the new photograph: the couple sits further LEFT in this file
+   than in the previous one, so the old 60/68% crops ran the copy onto the man.
+   Lower X shows more of the empty left band and pushes the subjects right.
+   Bounded on the other side by the woman's wrist at 77.4% of the file, which
+   must stay in frame — at 1024 those two constraints were 16px apart, which is
+   why the copy narrows there too. */
+@media (min-width:951px){  .hero__media img{object-position:44% 50%;} }
+@media (min-width:1200px){ .hero__media img{object-position:26% 50%;} }
+@media (min-width:1400px){ .hero__media img{object-position:46% 50%;} }
+
+@media (max-width:1399px) and (min-width:951px){
+  .hero .h-hero{font-size:clamp(38px,6.1vw,66px);}
+  .hero .lede{max-width:34ch;}
+  .hero__copy{max-width:28rem;}
+}
+/* Below 1200 the two constraints — copy clear of the man, woman's wrist still
+   in frame — close to within a few pixels. The copy gives up the difference. */
+@media (max-width:1199px) and (min-width:951px){
+  .hero .h-hero{font-size:clamp(36px,5.6vw,58px);}
+  .hero .lede{max-width:30ch;font-size:15px;}
+  .hero__copy{max-width:23rem;}
+}
+
+/* --- Hero markers -----------------------------------------------------------
+   Ported from the approved mockup. A 44px button whose visible part is an 11px
+   dot, sitting on the bracelet BELOW each case so it never covers the product.
+   The card opens on click, floats over the photograph, and flips below the dot
+   when there is no room above it. */
+.hero__spots{position:absolute;inset:0;z-index:4;pointer-events:none;}
+
+.hspot{
+  position:absolute;transform:translate(-50%,-50%);pointer-events:auto;
+  width:var(--tap);height:var(--tap);display:grid;place-items:center;
+  border:0;background:none;padding:0;
+}
+.hspot i{
+  width:11px;height:11px;border-radius:50%;background:rgba(255,255,255,.92);
+  box-shadow:0 0 0 3px rgba(255,255,255,.22),0 1px 4px rgba(0,0,0,.5);
+  transition:transform var(--fast) var(--ease),box-shadow var(--fast) var(--ease);
+}
+.hspot:hover i,.hspot[aria-expanded="true"] i{
+  transform:scale(1.25);
+  box-shadow:0 0 0 6px rgba(255,255,255,.28),0 1px 6px rgba(0,0,0,.5);
+}
+.hspot:focus-visible{outline:2px solid #fff;outline-offset:2px;border-radius:50%;}
+.hspot i::after{
+  content:"";position:absolute;width:var(--tap);height:var(--tap);border-radius:50%;
+  border:1px solid rgba(255,255,255,.45);opacity:0;
+  animation:hpulse 3.2s var(--ease) infinite;
+}
+@keyframes hpulse{0%{transform:scale(.5);opacity:.7}70%{transform:scale(1);opacity:0}100%{opacity:0}}
+
+.hcard{
+  position:absolute;z-index:5;width:300px;pointer-events:auto;
+  /* .hero carries .ink, so without this the card inherits light text and
+     renders nearly invisible on its own light ground. */
+  color:var(--graphite);
+  background:rgba(233,236,238,.97);backdrop-filter:blur(8px);
+  border:1px solid rgba(255,255,255,.5);box-shadow:0 18px 44px rgba(0,0,0,.45);
+  padding:16px;display:none;transform:translateY(6px);opacity:0;
+  transition:opacity var(--fast) var(--ease),transform var(--fast) var(--ease);
+}
+.hcard.is-on{display:block;}
+.hcard.is-in{opacity:1;transform:none;}
+.hcard__row{display:grid;grid-template-columns:76px 1fr;gap:14px;align-items:center;}
+.hcard__row img{width:76px;height:76px;object-fit:contain;background:#fff;border:1px solid var(--rule);}
+.hcard__k{
+  font-size:10px;font-weight:600;letter-spacing:.16em;text-transform:uppercase;
+  color:var(--mist-text);margin:0 0 4px;
+}
+.hcard b{font-family:var(--display);font-weight:400;font-size:18px;display:block;line-height:1.2;}
+.hcard .price{font-size:14px;margin-top:6px;display:block;}
+.hcard__go{
+  display:flex;align-items:flex-end;min-height:var(--tap);
+  margin-top:10px;padding-top:12px;border-top:1px solid var(--rule);
+  font-size:11px;letter-spacing:.16em;text-transform:uppercase;color:var(--graphite);
+}
+.hcard__go:hover{color:var(--blued);}
+.hcard__x{
+  position:absolute;top:2px;right:2px;width:var(--tap);height:var(--tap);
+  border:0;background:none;color:var(--mist-text);font-size:17px;line-height:1;
+}
+.hcard::before{
+  content:"";position:absolute;width:10px;height:10px;
+  background:rgba(233,236,238,.97);
+  border-left:1px solid rgba(255,255,255,.5);border-top:1px solid rgba(255,255,255,.5);
+  transform:rotate(45deg);
+}
+.hcard[data-side="below"]::before{top:-6px;left:var(--ax,34px);}
+.hcard[data-side="above"]::before{bottom:-6px;left:var(--ax,34px);transform:rotate(225deg);}
+
+@media (prefers-reduced-motion:reduce){
+  .hspot i,.hcard{transition:none;}
+  .hspot i::after{animation:none;}
+  .hspot:hover i,.hspot[aria-expanded="true"] i{transform:none;}
+}
+
+/* auto-fit rather than a fixed max-width, so the row does not sit half empty */
+.heromob{padding-top:clamp(40px,5vw,64px);}
+.heromob .pgrid{grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:clamp(18px,2vw,32px);}
+
+/* --- Hero below 950 ---------------------------------------------------------
+   Stack instead of overlay. At this width object-fit:cover zooms the 16:9 frame
+   so hard that the empty left band is cropped away entirely and the copy lands
+   on a face. The picture gets its own 4:5 box cropped to the RIGHT half, where
+   both people are — a centred crop pushes the woman off the edge — and the copy
+   sits on graphite beneath it. Hotspots are dropped; the cards carry the
+   products.
+
+   The mockup stacks at 900. Measured against THIS photograph the overlay stops
+   working at about 950: below it, no object-position keeps the copy clear of the
+   man and the woman's wrist inside the frame at the same time — at 901 the two
+   constraints leave a single viable value, and under that none. So the switch
+   happens where the geometry actually fails, not where the mockup guessed. */
+@media (max-width:950px){
+  .hero{min-height:0;display:flex;flex-direction:column;background:var(--graphite);}
+  .hero__media{position:relative;inset:auto;aspect-ratio:4/5;}
+  .hero__media img{width:100%;height:100%;object-position:78% 38%;}
+  .hero__grid{position:static;padding-block:32px 8px;}
+  .hero__copy{max-width:none;}
+  .hero__spots{display:none;}
+}
+
+/* Inline text button that reads as a link but is a real <button>. */
+.linkish{color:var(--blued);text-decoration:underline;text-underline-offset:3px;font:inherit;
+  min-height:var(--tap);min-width:var(--tap);padding:0 2px;}
+.linkish:hover{color:var(--blued-lift);}
+
+/* Load more. A button, not infinite scroll — the footer carries seven real
+   destinations and infinite scroll takes it away from people. */
+.loadmore{display:flex;flex-direction:column;align-items:center;gap:14px;padding:52px 0 8px;}
+
+/* --- Header nav at the narrow end of desktop --------------------------------
+   Adding Journal made four items where three fitted. Below ~1200 "Haute
+   Horlogerie" and "Client Care" wrapped to two lines and sat hard against the
+   wordmark — no overflow, no contrast failure, so the audit passed while the
+   header read as broken. Tighten the tracking and gap, and forbid wrapping so
+   the failure would be visible rather than silent. */
+.nav a{white-space:nowrap;}
+@media (max-width:1340px){
+  .nav{gap:20px;}
+  .nav a{font-size:11px;letter-spacing:.08em;}
+}
+@media (max-width:1120px){
+  .nav{gap:13px;}
+  .nav a{font-size:10.5px;letter-spacing:.03em;}
+  /* Client Care lives in the footer too; at this width the wordmark needs the
+     room more than a fourth nav item does. */
+  .nav a:last-child{display:none;}
+}
+
+/* "from" on a card whose variants carry different prices. Two references range
+   $16,400 above their base, and a flat figure there is a price the customer
+   will not be charged. */
+.price__from{
+  font-family:var(--body);font-size:10px;letter-spacing:.14em;text-transform:uppercase;
+  color:var(--mist-text);margin-right:4px;
+}
+
+/* --- Image swatches ---------------------------------------------------------
+   15.2% of the catalogue carries a variant image, but those ten references are
+   the ones customers land on from the hero — so a photograph is used wherever
+   one exists and a colour circle carries the rest. A brown strap and a steel
+   bracelet are different objects, not different colours, and a dot cannot say
+   that; where the shop has not supplied a photograph the dot is still the
+   honest fallback.
+
+   The accessible label stays the hex. Selldone generates colour names at render
+   time rather than storing them, so a name here would be invented. The visible
+   "Finish 2 of 5" ordinal is what keeps colour from being the only indicator. */
+.sw--img{
+  width:52px;height:52px;border-radius:var(--radius);overflow:visible;
+  background:var(--dial-pure);border:1px solid var(--rule);position:relative;padding:0;
+}
+.sw--img img{width:100%;height:100%;object-fit:contain;border-radius:var(--radius);}
+.sw--img.is-on{border-color:var(--blued);box-shadow:0 0 0 2px var(--blued);}
+/* the colour still shows, as a corner dot, so the finish is readable at a glance */
+.sw__dot{
+  position:absolute;right:-3px;bottom:-3px;width:14px;height:14px;border-radius:50%;
+  border:2px solid var(--dial-pure);
+}
+.swsku{
+  font-family:var(--data);font-size:11px;letter-spacing:.06em;color:var(--mist-text);
+  margin-left:10px;
+}

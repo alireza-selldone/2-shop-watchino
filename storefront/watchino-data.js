@@ -212,6 +212,51 @@ export async function loadArticle({ blogId, slug }) {
   };
 }
 
+/* ---------- Order history ----------
+   xapi.checkout.order_history.list — GET /shops/@{shop}/basket/orders-{type}
+   with the order-history scope, which the storefront client already holds.
+   This shop is physical-only, so the type is PHYSICAL. */
+export async function loadOrders(accessToken, { type = "PHYSICAL", limit = 10 } = {}) {
+  if (!accessToken) return null;
+  const url = `${SHOP.xapi}/shops/@${SHOP.handle}/basket/orders-${type}?offset=0&limit=${limit}`;
+  const r = await fetch(url, {
+    headers: { Accept: "application/json", Authorization: `Bearer ${accessToken}` },
+  });
+  if (!r.ok) throw new Error(`orders ${r.status}`);
+  const j = await r.json();
+  if (j?.error) throw new Error(j.error_msg || "Order history unavailable");
+  const rows = j.baskets || j.orders || j.data || [];
+  return rows.map((o) => ({
+    id: o.id,
+    date: o.created_at || o.reserved_at || null,
+    status: o.status || o.delivery_state || "",
+    total: Number(o.price ?? o.total ?? 0),
+    currency: o.currency || "USD",
+    items: Number(o.items_count ?? (o.items || []).length ?? 0),
+  }));
+}
+
+/* ---------- Hero ----------
+   One constant, so swapping the photograph is a one-line change.
+
+   Coordinates are percentages of the FILE and were MEASURED against it, not
+   eyeballed. The watches are steel now, not rose gold, so the previous purple
+   pixel-search does not apply — these came from cropping the wrist regions and
+   reading the case boxes off the crops.
+
+     709761 Molex Rectangular Regent  man's wrist    dial 53.9%, 70.6%
+     709762 Bonin Petite Classic      woman's wrist  dial 77.4%, 63.5%
+
+   `dot` sits on the bracelet BELOW each case, so the control never covers the
+   product. Both are percentages, so they track the object-fit crop. */
+export const HERO_IMAGE = "assets/hero-couple.png";
+export const HERO_NATURAL = { w: 1672, h: 941 };
+
+export const HERO_HOTSPOTS = [
+  { id: 709761, dial: { x: 53.9, y: 70.6 }, dot: { x: 53.9, y: 74.0 } },
+  { id: 709762, dial: { x: 77.4, y: 63.5 }, dot: { x: 77.4, y: 67.0 } },
+];
+
 /* ---------- Images ---------- */
 export function img(path, size) {
   return selldoneImagePathToUrl(path, { shopId: SHOP.id, scope: "products", size });
@@ -229,7 +274,7 @@ export const money = (n) =>
    dis_start/dis_end window that closed on 2024-11-27. Reading the raw field
    would advertise a reduction that no longer exists and would put nearly the
    whole catalogue on sale. Validated against the server's own final_price:
-   agrees on 35/35. */
+   agrees on every reference. */
 export function activeDiscount(p, now = Date.now()) {
   if (!(Number(p.discount) > 0)) return 0;
   if (p.dis_start && now < Date.parse(p.dis_start)) return 0;
@@ -245,7 +290,7 @@ export const wasPrice = (p) => (activeDiscount(p) > 0 ? Number(p.price) : null);
    ordinal, so colour is never the only indicator.
 
    Composite colours such as "#7B1FA2/#D32F2F" are not valid CSS colours and are
-   rendered as a hard 135deg split. 13 of the 35 references carry one. */
+   rendered as a hard 135deg split; a large minority of references carry one. */
 export const isComposite = (c) => typeof c === "string" && c.includes("/");
 
 export function swatchStyle(color) {
@@ -264,33 +309,52 @@ export function swatchLabel(color) {
     : color;
 }
 
-export const variantColors = (p) =>
-  (p.variants || []).map((v) => v && v.color).filter(Boolean);
+export const variantColors = (p) => variantsOf(p).map((v) => v.color).filter(Boolean);
 
 /* Which colours are plausible watch finishes.
    The catalogue carries 126 variant instances: 86 real finishes, 11 arguable,
    15 junk (deep purple, magenta) and 14 two-tone composites. Rather than invent
    finish names or silently show a lime watch, the swatch row is filtered to
    this curated set. Hand-authored, deliberately conservative, easy to override. */
-export const FINISH = new Set([
-  "#000000", // black
-  "#FFFFFF", // white
-  "#C0C0C0", // steel
-  "#383838", // gunmetal
-  "#616161", // grey
-  "#5D4037", // brown leather
-  "#BEA994", // tan leather
-  "#D6BEA6", // light tan
-  "#FFD700", // yellow gold
-  "#FFA000", // amber gold
-  "#b76e79", // rose gold
-  "#303F9F", // navy dial
-  "#1976D2", // blue dial
-]);
-const norm = (c) => String(c || "").trim();
-export const isFinish = (c) => !isComposite(c) && FINISH.has(norm(c));
-/* Real finishes for a product, de-duplicated and in catalogue order. */
-export const finishesOf = (p) => [...new Set(variantColors(p).filter(isFinish))];
+/* ---------- Variants ----------
+   `products/list` carries TWO arrays. `variants` is a distinct-values summary —
+   colour, image and nothing else. `product_variants` is the real thing: id, sku,
+   colour, image, and its own price, discount and stock. Read the second.
+
+   There used to be a FINISH allowlist here that only rendered colours it
+   recognised. It was written for an earlier catalogue and quietly ate the
+   current one: on 709761 it kept 1 of 5 real variants — one loss purely to
+   case, "#b76e79" against "#B76E79" — so the page claimed a single finish for a
+   reference sold in five. It is gone. Every variant the shop defines renders.
+   A colour that looks wrong is shop data to fix in Selldone, not something the
+   storefront should hide. */
+export function variantsOf(p) {
+  const rows = p?.product_variants || p?.raw?.product_variants || [];
+  return rows
+    .filter((v) => v && v.enable !== false && !v.deleted_at)
+    .map((v) => ({
+      id: v.id,
+      sku: v.sku || "",
+      color: v.color || "",
+      image: v.image || null,
+      /* `pricing:false` means the variant does not override the product price —
+         reading v.price regardless would invent per-variant prices that the
+         shop never set. */
+      price: v.pricing ? Number(v.price) : null,
+      discount: v.pricing ? Number(v.discount) || 0 : 0,
+      qty: Number(v.quantity) || 0,
+    }));
+}
+
+/* What a card should print. Two references range to $16,400 above their base
+   price, so a flat figure there is a price the customer will not be charged. */
+export function priceRange(p) {
+  const prices = variantsOf(p).map((v) => v.price).filter((n) => n > 0);
+  const base = Number(p.price) || 0;
+  if (prices.length < 2) return { from: base, to: base, varies: false };
+  const lo = Math.min(base, ...prices), hi = Math.max(base, ...prices);
+  return { from: lo, to: hi, varies: hi > lo };
+}
 
 /* ---------- Categories ----------
    Titles and membership are live. The representative image for each collection
@@ -396,9 +460,10 @@ export async function loadCatalog() {
       rateCount: Number(p.rate_count) || 0,
       spec: p.spec && typeof p.spec === "object" ? p.spec : null,
       colors: variantColors(p),
+      variants: variantsOf(p),
+      range: priceRange(p),
       icon: p.icon || "",
       image: img(p.icon),
-      variantImages: (p.variants || []).map((v) => (v && v.image ? img(v.image) : "")).filter(Boolean),
       raw: p,
     };
   });

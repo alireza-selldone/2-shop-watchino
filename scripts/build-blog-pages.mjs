@@ -81,7 +81,7 @@ const PAGES = [
                 <img src="" alt="" width="1600" height="900">
               </div>
               <div class="prose" data-article-body></div>
-              <p style="margin-top:44px"><a class="btn btn--text" href="blog.html">← All articles</a></p>
+              <p style="margin-top:44px"><a class="btn btn--text" href="/blog">← All articles</a></p>
             </div>
           </section>
         </article>

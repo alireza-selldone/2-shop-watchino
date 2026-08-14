@@ -10,7 +10,9 @@ const fmtDate = (iso) =>
     : "";
 
 function cardHTML(p) {
-  const href = p.slug ? `article.html?slug=${encodeURIComponent(p.slug)}` : `article.html?id=${p.blogId}`;
+  // Extensionless: Cloudflare's html_handling strips ".html" and 307s, so
+  // linking article.html would cost a redirect on every click.
+  const href = p.slug ? `article?slug=${encodeURIComponent(p.slug)}` : `article?id=${p.blogId}`;
   return `<a class="post" href="${href}">
     <div class="post__art">
       ${p.image ? `<img src="${esc(p.image)}" alt="" loading="lazy" width="800" height="450">` : ""}

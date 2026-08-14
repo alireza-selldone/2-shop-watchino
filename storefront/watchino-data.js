@@ -239,17 +239,24 @@ export async function loadOrders(accessToken, { type = "PHYSICAL", limit = 10 } 
 /* ---------- Hero ----------
    One constant, so swapping the photograph is a one-line change.
 
-   The hotspot coordinates were MEASURED off the file, not eyeballed: the purple
+   The dial coordinates were MEASURED off the file, not eyeballed: the purple
    dials are the only strongly purple pixels in an otherwise black-and-warm
    frame, so locating them is a pixel search rather than a guess.
-     man   65.4% across, 57.5% down
-     woman 80.7% across, 54.6% down
-   They are percentages so they track the image as object-fit crops it. */
+     man's wrist   65.4% across, 57.5% down   dial is 1.14% x 2.34% of the frame
+     woman's wrist 80.7% across, 54.6% down   dial is 1.08% x 1.81%
+
+   709740 Bonin Amethyst Crown is the watch on the MAN's wrist. Both references
+   sit in Women's Collection in Selldone — that is the shop's own categorisation,
+   not a mislabelled card. */
 export const HERO_IMAGE = "assets/hero-couple.png";
 
 export const HERO_HOTSPOTS = [
-  { id: 709734, x: 65.4, y: 57.5, wrist: "left" },
-  { id: 709740, x: 80.7, y: 54.6, wrist: "right" },
+  /* dial   — measured centre of the purple dial, used to draw the tether
+     marker — where the button sits: 2.2% clear of a dial that is only ~1.1%
+               wide, so the control never covers the product it points at
+     side   — which way the card opens, so it never lands on the couple */
+  { id: 709740, dial: { x: 65.4, y: 57.5 }, marker: { x: 63.2, y: 60.6 }, side: "left" },
+  { id: 709734, dial: { x: 80.7, y: 54.6 }, marker: { x: 78.5, y: 57.7 }, side: "left" },
 ];
 
 /* ---------- Images ---------- */

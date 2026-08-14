@@ -88,10 +88,11 @@
         <section class="hero ink" data-hero>
           <div class="hero__media">
             <img data-hero-img src="" alt="" width="1672" height="941" fetchpriority="high">
-            <!-- Hotspots are positioned in percentages so they track the crop.
-                 Removed entirely below 768 — see .hero__spot in styles.css. -->
-            <div class="hero__spots" data-hero-spots hidden></div>
           </div>
+          <!-- Sibling of .hero__media, not a child: .hero__media carries z-index 0,
+               which opens a stacking context that would trap this layer beneath the
+               copy and swallow every click on a marker. -->
+          <div class="hero__spots" data-hero-spots hidden></div>
           <div class="wrap hero__grid">
             <div class="hero__copy">
               <div class="sweep">

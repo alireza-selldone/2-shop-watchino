@@ -1074,44 +1074,91 @@ html.js-reveal .reveal.is-in{opacity:1;transform:none;}
   width:100%;height:100%;object-fit:cover;object-position:72% 50%;
   /* the source is already near-black at the left; nothing is painted over it */
 }
-.hero__grid{position:relative;z-index:2;width:100%;}
+/* The copy layer spans the full hero, so left to itself it intercepts clicks
+   destined for a marker. Only the copy column should take pointer events. */
+.hero__grid{position:relative;z-index:2;width:100%;pointer-events:none;}
+.hero__copy{pointer-events:auto;}
 .hero__copy{max-width:34rem;}
 
 @media (min-width:1024px){ .hero__media img{object-position:68% 50%;} }
 @media (min-width:1440px){ .hero__media img{object-position:60% 50%;} }
 
 /* --- Hero markers -----------------------------------------------------------
-   An 8px dot that marks the watch without covering it. The previous 44px pin
-   was larger than the dial it pointed at, so the product disappeared behind the
-   thing meant to sell it.
+   The control is a 44px button; the only visible part is an 8px dot. It sits
+   2.2% clear of a dial that is 1.1% wide, so it points at the watch instead of
+   covering it — the previous 44px pin was larger than the dial itself.
 
-   Not interactive: there is no off-subject position in this photograph for the
-   woman's label (x 80-95% at her wrist height is arm, dress and lit background;
-   the only dark strip, 96-99%, is cropped away at 1280 and below). Both
-   references are ordinary cards under the photograph instead. */
-.hero__spots{position:absolute;inset:0;z-index:3;pointer-events:none;}
-.hero__dot{
-  position:absolute;width:8px;height:8px;border-radius:50%;
-  transform:translate(-50%,-50%);
-  background:var(--dial);
-  box-shadow:0 0 0 1px rgba(22,25,29,.55), 0 0 12px 3px rgba(233,236,238,.35);
+   The card opens on click, not hover. A card the reader asked for may sit over
+   the photograph; a label that appears under a moving cursor may not, which is
+   what made the empty-space constraint binding before. */
+.hero__spots{position:absolute;inset:0;z-index:4;}
+
+.hero__tether{
+  position:absolute;height:1px;transform-origin:0 50%;
+  background:linear-gradient(to right,rgba(233,236,238,.85),rgba(233,236,238,.25));
+  pointer-events:none;
 }
-/* A slow pulse says "look here" without moving anything the eye is reading. */
+
+.hero__spot{position:absolute;transform:translate(-50%,-50%);}
+.hero__pin{
+  width:var(--tap);height:var(--tap);display:grid;place-items:center;
+  background:none;border:0;border-radius:50%;
+}
+.hero__dot{
+  width:8px;height:8px;border-radius:50%;background:var(--dial);
+  box-shadow:0 0 0 1px rgba(22,25,29,.55),0 0 12px 3px rgba(233,236,238,.35);
+  transition:transform var(--fast) var(--ease),background var(--fast) var(--ease);
+}
+.hero__pin:hover .hero__dot,
+.hero__pin:focus-visible .hero__dot{transform:scale(1.55);background:var(--blued-lift);}
+.hero__spot.is-on .hero__dot{transform:scale(1.55);background:var(--blued);}
+.hero__pin:focus-visible{outline:2px solid var(--blued-lift);outline-offset:2px;}
+
 @media (prefers-reduced-motion:no-preference){
   .hero__dot::after{
-    content:"";position:absolute;inset:-5px;border-radius:50%;
-    border:1px solid rgba(233,236,238,.5);
+    content:"";position:absolute;width:8px;height:8px;border-radius:50%;
+    box-shadow:0 0 0 1px rgba(233,236,238,.5);
     animation:dotring 3.6s var(--ease) infinite;
   }
+  .hero__spot.is-on .hero__dot::after{animation:none;}
   @keyframes dotring{
-    0%   {transform:scale(.6);opacity:0;}
-    35%  {opacity:.8;}
-    100% {transform:scale(1.5);opacity:0;}
+    0%{transform:scale(1);opacity:0;} 35%{opacity:.75;} 100%{transform:scale(3.4);opacity:0;}
   }
 }
 
-/* The two references under the photograph. Shown at every width now, not only
-   on mobile, because the hotspots they replace could not be placed cleanly. */
+/* The card floats over the photograph, opening away from the couple. */
+.hero__card{
+  position:absolute;top:50%;width:270px;
+  opacity:0;visibility:hidden;pointer-events:none;
+  transition:opacity var(--fast) var(--ease),transform var(--fast) var(--ease),visibility var(--fast);
+}
+.hero__card--left{right:calc(50% + 26px);transform:translateY(-50%) translateX(8px);}
+.hero__card--right{left:calc(50% + 26px);transform:translateY(-50%) translateX(-8px);}
+.hero__spot.is-on .hero__card{opacity:1;visibility:visible;pointer-events:auto;transform:translateY(-50%) translateX(0);}
+
+.hero__card__in{
+  display:flex;gap:14px;align-items:center;
+  background:var(--dial-pure);color:var(--graphite);
+  border:1px solid var(--rule);border-radius:var(--radius);padding:12px;
+  box-shadow:0 18px 44px rgba(0,0,0,.45);
+}
+.hero__card__in:hover{border-color:var(--blued);}
+.hero__card__art{width:70px;height:70px;flex:0 0 70px;background:var(--dial);position:relative;overflow:hidden;}
+.hero__card__art img{position:absolute;inset:5px;width:calc(100% - 10px);height:calc(100% - 10px);object-fit:contain;}
+.hero__card__txt{display:flex;flex-direction:column;gap:2px;min-width:0;}
+.hero__card__cat{
+  font-size:9.5px;letter-spacing:.18em;text-transform:uppercase;color:var(--mist-text);
+}
+.hero__card__name{font-family:var(--display);font-size:16px;line-height:1.2;}
+.hero__card__cta{font-size:10.5px;letter-spacing:.14em;text-transform:uppercase;color:var(--blued);margin-top:3px;}
+
+@media (prefers-reduced-motion:reduce){
+  .hero__dot,.hero__card{transition:none;}
+  .hero__pin:hover .hero__dot,.hero__spot.is-on .hero__dot{transform:none;}
+}
+
+/* The two references under the photograph. Shown at every width: the whole
+   interaction on touch, and the fallback everywhere else. */
 .heromob{padding-top:clamp(40px,5vw,64px);}
 .heromob .pgrid{grid-template-columns:repeat(2,1fr);gap:clamp(18px,2vw,32px);max-width:760px;}
 

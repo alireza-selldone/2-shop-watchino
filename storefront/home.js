@@ -206,18 +206,16 @@ function fillHome(cat) {
 }
 
 /* ---------- Hero markers ----------
-   The interactive hotspots were removed. Measured against the photograph, the
-   only label position anywhere in frame that sits on empty dark ground and is
-   reachable without a leader crossing a subject is (51%, 74%) — and it serves
-   the man's watch. For the woman's there is none:
+   A 44px button whose only visible part is an 8px dot, sitting 2.2% clear of a
+   dial that is 1.1% wide — so the control never covers the product it sells.
+   A hairline tether runs from the dot back to the dial it refers to.
 
-     at her wrist height, x 80-95% is continuously lit (mean 36-148) — her arm,
-     her dress, then candlelit background. The only dark strip is x 96-99%, and
-     object-fit crops that away entirely at 1280 and 1024.
+   The card opens on CLICK and floats over the photograph. That is why the empty
+   space this frame lacks does not matter: a card summoned deliberately may sit
+   over the couple, where a hover label appearing under the cursor may not.
 
-   Rather than crowd a label onto her dress, both watches now carry an 8px dot
-   that marks without covering, and both references appear as ordinary cards
-   below the photograph at every width — the treatment mobile already used. */
+   The two references also appear as ordinary cards below the photograph. That is
+   the whole interaction on touch, and the fallback everywhere else. */
 function fillHotspots(cat) {
   const layer = document.querySelector("[data-hero-spots]");
   const mob = document.querySelector("[data-hero-mob]");
@@ -230,19 +228,34 @@ function fillHotspots(cat) {
 
   if (!found.length) { layer.hidden = true; if (mob) mob.hidden = true; return; }
 
-  /* Decorative only: aria-hidden, no pointer events. The card below each is the
-     accessible, tappable route to the product — a marker that reveals something
-     on hover would be unreachable by keyboard and invisible on touch. */
   layer.hidden = false;
-  layer.setAttribute("aria-hidden", "true");
-  layer.innerHTML = found.map(() => `<span class="hero__dot"></span>`).join("");
+  layer.removeAttribute("aria-hidden");
+  layer.innerHTML = found.map((h, i) => `
+    <span class="hero__tether" data-tether="${i}" aria-hidden="true"></span>
+    <div class="hero__spot" data-spot="${i}">
+      <button class="hero__pin" type="button" aria-expanded="false"
+              aria-label="${esc(h.p.name)}, ${money(h.p.price)} — show details">
+        <span class="hero__dot" aria-hidden="true"></span>
+      </button>
+      <span class="hero__card hero__card--${h.side}" role="group" aria-label="${esc(h.p.name)}">
+        <a class="hero__card__in" href="product.html?id=${h.p.id}">
+          <span class="hero__card__art"><img src="${h.p.image}" alt="" width="120" height="120"></span>
+          <span class="hero__card__txt">
+            <span class="hero__card__cat">${esc(h.p.catName)}</span>
+            <span class="hero__card__name">${esc(h.p.name)}</span>
+            <span class="price">${money(h.p.price)}</span>
+            <span class="hero__card__cta">View reference →</span>
+          </span>
+        </a>
+      </span>
+    </div>`).join("");
 
-  /* The coordinates are percentages of the PHOTOGRAPH, but the overlay is the
-     size of the element box — and object-fit:cover crops the two apart. Placing
-     the dots by percentage put the woman's 68px off her wrist at 1024. Project
-     image space into box space, the same maths herocheck.mjs asserts with. */
+  /* Coordinates are percentages of the PHOTOGRAPH; the overlay is the size of
+     the element box, and object-fit:cover crops the two apart. Project rather
+     than position by percentage — that error put a marker 68px off a wrist. */
   const img = document.querySelector("[data-hero-img]");
-  const dots = [...layer.querySelectorAll(".hero__dot")];
+  const spots = [...layer.querySelectorAll(".hero__spot")];
+  const tethers = [...layer.querySelectorAll(".hero__tether")];
   const place = () => {
     if (!img.naturalWidth) return;
     const r = img.getBoundingClientRect();
@@ -251,21 +264,49 @@ function fillHotspots(cat) {
     const [ox, oy = "50%"] = cs.objectPosition.split(" ");
     const pc = (v, px) => (v.endsWith("%") ? parseFloat(v) : (parseFloat(v) / px) * 100);
     const scale = Math.max(r.width / img.naturalWidth, r.height / img.naturalHeight);
-    const dispW = img.naturalWidth * scale, dispH = img.naturalHeight * scale;
-    const offX = (r.width - dispW) * (pc(ox, r.width) / 100);
-    const offY = (r.height - dispH) * (pc(oy, r.height) / 100);
+    const dW = img.naturalWidth * scale, dH = img.naturalHeight * scale;
+    const offX = (r.width - dW) * (pc(ox, r.width) / 100);
+    const offY = (r.height - dH) * (pc(oy, r.height) / 100);
+    const at = (pt) => ({ x: offX + (pt.x / 100) * dW, y: offY + (pt.y / 100) * dH });
+
     found.forEach((h, i) => {
-      const x = offX + (h.x / 100) * dispW;
-      const y = offY + (h.y / 100) * dispH;
-      const inside = x > 0 && x < r.width && y > 0 && y < r.height;
-      dots[i].style.left = `${x}px`;
-      dots[i].style.top = `${y}px`;
-      dots[i].hidden = !inside;   // a dot cropped out of frame is not drawn
+      const m = at(h.marker), d = at(h.dial);
+      const inside = m.x > 22 && m.x < r.width - 22 && m.y > 22 && m.y < r.height - 22;
+      spots[i].style.left = `${m.x}px`;
+      spots[i].style.top = `${m.y}px`;
+      spots[i].hidden = !inside;
+      // hairline from the dot back to the dial it points at
+      const dx = d.x - m.x, dy = d.y - m.y;
+      tethers[i].style.left = `${m.x}px`;
+      tethers[i].style.top = `${m.y}px`;
+      tethers[i].style.width = `${Math.hypot(dx, dy)}px`;
+      tethers[i].style.transform = `rotate(${Math.atan2(dy, dx)}rad)`;
+      tethers[i].hidden = !inside;
     });
   };
   if (img.complete && img.naturalWidth) place();
   img.addEventListener("load", place);
   addEventListener("resize", place);
+
+  /* Click to open, click again or Escape or click-away to close. Only one card
+     at a time, so two cards can never overlap each other. */
+  const closeAll = (except) => spots.forEach((s) => {
+    if (s === except) return;
+    s.classList.remove("is-on");
+    s.querySelector(".hero__pin").setAttribute("aria-expanded", "false");
+  });
+  spots.forEach((spot) => {
+    const btn = spot.querySelector(".hero__pin");
+    btn.addEventListener("click", (e) => {
+      e.stopPropagation();
+      const open = !spot.classList.contains("is-on");
+      closeAll(spot);
+      spot.classList.toggle("is-on", open);
+      btn.setAttribute("aria-expanded", String(open));
+    });
+  });
+  addEventListener("click", () => closeAll(null));
+  addEventListener("keydown", (e) => { if (e.key === "Escape") closeAll(null); });
 
   if (mob && mobList) {
     mobList.innerHTML = found.map((h) => cardHTML(h.p)).join("");

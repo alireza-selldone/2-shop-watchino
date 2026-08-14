@@ -61,10 +61,20 @@ for (const w of [1440, 1280, 1024]) {
       boxW: Math.round(r.width), boxH: Math.round(r.height),
       posX: pc(ox, r.width), posY: pc(oy || "50%", r.height),
       fit: cs.objectFit,
-      scrims: [...document.querySelectorAll(".hero *")].filter((el) => {
-        const s = getComputedStyle(el);
-        return /gradient/.test(s.backgroundImage);
-      }).length,
+      /* A scrim is a gradient that COVERS the photograph. Presence alone is the
+         wrong test: the 1px hairline tethers from each marker back to its dial
+         are gradients too, and flagging them would have forced the check to be
+         switched off — which is how a check stops meaning anything. Measure the
+         share of the hero each gradient element covers instead. */
+      scrims: (() => {
+        const hero = document.querySelector(".hero").getBoundingClientRect();
+        const area = hero.width * hero.height;
+        return [...document.querySelectorAll(".hero *")].filter((el) => {
+          if (!/gradient/.test(getComputedStyle(el).backgroundImage)) return false;
+          const r = el.getBoundingClientRect();
+          return (r.width * r.height) / area > 0.15;
+        }).length;
+      })(),
     };
   });
 
@@ -77,6 +87,35 @@ for (const w of [1440, 1280, 1024]) {
   }
   if (geo.scrims) fail(`${geo.scrims} gradient overlay(s) inside .hero — the brief forbids a scrim`);
   else pass("no gradient scrim over the photograph");
+  await p.close();
+}
+
+/* ---- negative control: the scrim test --------------------------------------
+   Inject a real full-bleed gradient and confirm the check reports it. Without
+   this, relaxing the rule from "any gradient" to "a gradient covering 15% of the
+   hero" could have quietly disabled it — the hairline tethers are gradients too,
+   and the easy fix would have been to stop looking. */
+{
+  const p = await (await b.newContext({ viewport: { width: 1440, height: 900 } })).newPage();
+  await p.goto(B + "/", { waitUntil: "domcontentloaded" });
+  await p.waitForSelector(".hero", { timeout: 20000 });
+  const caughtScrim = await p.evaluate(() => {
+    const hero = document.querySelector(".hero");
+    const el = document.createElement("div");
+    el.style.cssText = "position:absolute;inset:0;background:linear-gradient(90deg,#000,transparent);";
+    hero.appendChild(el);
+    const a = hero.getBoundingClientRect();
+    const n = [...document.querySelectorAll(".hero *")].filter((x) => {
+      if (!/gradient/.test(getComputedStyle(x).backgroundImage)) return false;
+      const r = x.getBoundingClientRect();
+      return (r.width * r.height) / (a.width * a.height) > 0.15;
+    }).length;
+    el.remove();
+    return n;
+  });
+  console.log(String.fromCharCode(10) + "Negative control — a real full-bleed scrim");
+  if (caughtScrim > 0) pass(`an injected full-bleed gradient IS reported (${caughtScrim}) — the scrim test can fail`);
+  else fail("an injected full-bleed scrim was NOT caught; the scrim test proves nothing");
   await p.close();
 }
 

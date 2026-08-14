@@ -36,7 +36,47 @@ push. Disconnecting it is a dashboard action.
 
 ---
 
-## The hero markers — the briefed design could not be built
+## The hero markers — clickable, with the card over the photograph
+
+Superseded the earlier conclusion. The blocker was that a **hover** label needs
+empty frame: it appears under a moving cursor, so it must not land on a subject.
+A card opened by a deliberate **click** carries no such constraint — which is
+the point I had missed. Each watch now has:
+
+- a 44px button whose only visible part is an 8px dot, sitting 2.2% clear of a
+  dial measured at 1.14% x 2.34% of the frame, so the control points at the
+  product instead of covering it
+- a 1px tether from the dot back to the dial it refers to
+- a card that opens on click, floats over the photograph, and closes on a second
+  click, on Escape, or on a click anywhere else. Only one opens at a time
+
+"Worn above" stays at every width: the whole interaction on touch, and the
+fallback if a card ever cannot fit.
+
+### Two real bugs found while doing it
+
+**The copy layer swallowed every click.** `.hero__media` carries `z-index: 0`,
+which opens a stacking context — so the markers' `z-index: 3` was scoped inside
+it and sat *below* the copy layer at `z-index: 2`. Playwright reported
+`<div class="wrap hero__grid"> intercepts pointer events`. The markers are now a
+sibling of `.hero__media`, and `.hero__grid` no longer takes pointer events
+except on the copy column itself.
+
+**The card thumbnails were blank.** `loading="lazy"` inside a `visibility:
+hidden` card never fetches, so the image only began loading after the card
+opened — and often not at all. Dropped the lazy attribute for these two.
+
+### And one check that had to be made more precise, not less
+
+The hairline tethers are `linear-gradient`s, so `check:hero`'s scrim test — which
+looked for the *presence* of a gradient inside `.hero` — started failing. The
+easy fix was to stop looking. Instead it now measures the share of the hero each
+gradient element covers and fails above 15%, and a second negative control
+injects a real full-bleed scrim every run to prove that test can still fire.
+
+---
+
+## The earlier conclusion, kept for the record
 
 You asked for a dot on the watch, a leader line out to empty space, and the
 interactive label at the end of that line: man down-left, woman right past her

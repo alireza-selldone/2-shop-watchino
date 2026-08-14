@@ -192,6 +192,13 @@ at three widths, and runs the same maths against a knowingly wrong crop
 the whole run** if either assertion fails to notice. A sweep that cannot go red
 is worse than no sweep, because it produces confidence.
 
+**The audit could not run against production, and now can.** `_audit.js` is
+deliberately excluded from the build so it is not publicly reachable, which meant
+`audit-run.mjs` could only ever import it locally — the one place the brief said
+not to stop at. It now reads the file from disk and injects the source into the
+page instead. Same checks, any deployment, harness still not shipped. Production
+is verified at 110/110 on that basis, not on the local run.
+
 **A sixth "check that couldn't fail" nearly shipped during this run.** My
 keyboard-order test called `document.body.focus()` to reset focus before tabbing.
 `body` is not focusable, so that is a no-op — focus had simply never left the

@@ -2,7 +2,7 @@
   "scripts": {
     "build": "npm run build:static",
     "build:static": "node scripts/build-static.mjs",
-    "build:pages": "node scripts/build-pages.mjs",
+    "build:pages": "node scripts/build-pages.mjs && node scripts/build-blog-pages.mjs",
     "dev": "npm run dev:static",
     "dev:static": "node scripts/dev-static.mjs",
     "deploy": "npx wrangler deploy",

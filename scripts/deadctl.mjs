@@ -25,7 +25,9 @@ const PAGES = [["home","/","#catgrid .cat"],["shop","/shop.html","#pgrid .pcard"
                 // the container reports both as unwired. Wait for a rendered row.
                 ["checkout","/checkout.html","#sumrows .sum__row"],
                 ["about","/about-us",".prose"],["terms","/terms",".prose"],
-                ["privacy","/privacy",".prose"],["contact","/contact-us",".prose"]];
+                ["privacy","/privacy",".prose"],["contact","/contact-us",".prose"],
+                ["blog","/blog",".post"],
+                ["article","/article.html?id=31528","[data-article-body] p"]];
 
 const b = await chromium.launch();
 const ctx = await b.newContext({ viewport:{width:1440,height:900} });

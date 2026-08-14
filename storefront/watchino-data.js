@@ -52,6 +52,166 @@ export async function subscribe(email, { accessKey = "newsletter", tags } = {}) 
   return body;
 }
 
+/* ---------- Reviews ----------
+   Sample content, labelled as such wherever it renders. This site removed
+   invented reviews once already because they were presented as real; the label
+   is what makes the difference, exactly as the banner does on the policy pages.
+
+   Deliberately generic rather than watch-specific, so the block survives when
+   this repo is imported into a shop selling something else.
+
+   The average and the distribution are DERIVED below, never typed. When
+   rate_count stops being zero across the catalogue, replace the sample array in
+   loadReviews() with the real source and `sample` becomes false — the label and
+   every figure follow automatically. */
+const SAMPLE_REVIEWS = [
+  { name: "Marta K.",   city: "Rotterdam", rating: 5,
+    body: "Ordered on the Thursday, arrived Monday morning. Packaging was sensible rather than excessive, and the item matched the listing photographs closely." },
+  { name: "Daniel R.",  city: "Bristol",   rating: 5,
+    body: "I asked two questions before ordering and got a straight answer to both, including one that talked me out of the more expensive option." },
+  { name: "Priya S.",   city: "Toronto",   rating: 4,
+    body: "No complaints about the item itself. Delivery took a day longer than the estimate, though the tracking was accurate the whole way." },
+  { name: "Tomás L.",   city: "Lisbon",    rating: 5,
+    body: "Second order from here. The first one settled it — returns were handled without an argument when I picked the wrong size." },
+  { name: "Anne-Sofie H.", city: "Aarhus", rating: 3,
+    body: "The product is good and I would buy it again. The checkout asked me to re-enter my address twice, which was more friction than it needed to be." },
+  { name: "Ibrahim O.", city: "Manchester", rating: 4,
+    body: "Fair price for the quality. It is not the cheapest available, but nothing about it feels like a compromise after a few months of use." },
+];
+
+/* Average and star distribution computed from whatever list is passed in. */
+export function summariseReviews(list) {
+  const total = list.length;
+  const counts = [5, 4, 3, 2, 1].map((star) => ({
+    star,
+    count: list.filter((r) => r.rating === star).length,
+  }));
+  const sum = list.reduce((n, r) => n + r.rating, 0);
+  return {
+    total,
+    average: total ? sum / total : 0,
+    counts: counts.map((c) => ({ ...c, pct: total ? (c.count / total) * 100 : 0 })),
+  };
+}
+
+/* One place to switch data sources. Real ratings win the moment any exist. */
+export function loadReviews(products = []) {
+  const rated = products.filter((p) => p.rateCount > 0);
+  if (rated.length) {
+    const list = rated.map((p) => ({
+      name: p.name, city: "", rating: Math.round(p.rate), body: "", productId: p.id,
+    }));
+    return { ...summariseReviews(list), reviews: list, sample: false };
+  }
+  return { ...summariseReviews(SAMPLE_REVIEWS), reviews: SAMPLE_REVIEWS, sample: true };
+}
+
+/* ---------- Blog ----------
+   Registry endpoints, not invented:
+     xapi.blogs.list  GET /shops/@{shop}/blogs        (?category, ?limit, ?extra)
+     xapi.blogs.get   GET /shops/@{shop}/blogs/{blog_id}
+
+   Two quirks worth knowing, both found by testing rather than reading:
+
+   1. `blog_id` on the detail route is the article's `parent_id` (the shop-blog
+      record), NOT the article id. Passing the article id returns "Blog not
+      found", which reads like the endpoint is missing.
+   2. `?extra=true` returns the category list but an EMPTY `articles` array,
+      filling `last_articles` instead. So categories and articles need separate
+      calls rather than one combined one.
+
+   The public list carries no category on each article. Rather than fetch the
+   detail of every post to find out (an N+1 that grows with the blog), the
+   category map is built with one filtered list call per category — bounded by
+   the number of categories, which stays small. */
+const URL_BLOGS = (q = "") => `${SHOP.xapi}/shops/@${SHOP.handle}/blogs${q}`;
+const URL_BLOG = (blogId) => `${SHOP.xapi}/shops/@${SHOP.handle}/blogs/${encodeURIComponent(blogId)}`;
+
+const asJson = async (url) => {
+  const r = await fetch(url, { headers: { Accept: "application/json" } });
+  if (!r.ok) throw new Error(`${r.status} ${url}`);
+  const j = await r.json();
+  if (j?.error) throw new Error(j.error_msg || "Blog request failed");
+  return j;
+};
+
+/* Selldone truncates `description` to 256 characters, which lands mid-word.
+   Trim back to the last sentence or word so the card does not end in "Start by co". */
+export function excerpt(text, max = 190) {
+  const t = String(text || "").trim();
+  if (t.length <= max) return t;
+  const cut = t.slice(0, max);
+  const stop = Math.max(cut.lastIndexOf(". "), cut.lastIndexOf("? "), cut.lastIndexOf("! "));
+  if (stop > max * 0.5) return cut.slice(0, stop + 1);
+  return cut.slice(0, cut.lastIndexOf(" ")).replace(/[,;:]$/, "") + "…";
+}
+
+export const articleDate = (a) =>
+  a.schedule_at || a.created_at || null;   // schedule_at is cleared once it fires
+
+/* Categories alone — one request. The article page needs a name for one id and
+   should not pull the whole listing to get it. */
+export async function loadBlogCategories() {
+  const extra = await asJson(URL_BLOGS("?extra=true")).catch(() => ({ categories: [] }));
+  return (extra.categories || []).map((c) => ({
+    id: c.id, name: c.category, count: Number(c.articles) || 0,
+  }));
+}
+
+export async function loadBlog() {
+  const [listing, extra] = await Promise.all([
+    asJson(URL_BLOGS("?limit=100")),
+    asJson(URL_BLOGS("?extra=true")).catch(() => ({ categories: [] })),
+  ]);
+
+  const cats = (extra.categories || []).map((c) => ({
+    id: c.id, name: c.category, count: Number(c.articles) || 0,
+  }));
+
+  // One filtered call per category gives every post its category without an
+  // N+1 over articles. Posts in no category simply never appear in a map entry.
+  const owners = new Map();
+  await Promise.all(cats.map(async (c) => {
+    try {
+      const r = await asJson(URL_BLOGS(`?category=${c.id}&limit=100`));
+      (r.articles || []).forEach((a) => owners.set(a.id, c));
+    } catch { /* a failing filter must not blank the whole listing */ }
+  }));
+
+  const posts = (listing.articles || []).map((a) => ({
+    id: a.id,
+    blogId: a.parent_id,          // the detail route wants this, not a.id
+    slug: a.slug,
+    title: a.title,
+    image: a.image,
+    excerpt: excerpt(a.description),
+    date: articleDate(a),
+    category: owners.get(a.id) || null,
+  }));
+
+  posts.sort((x, y) => Date.parse(y.date || 0) - Date.parse(x.date || 0));
+  return { posts, cats, total: Number(listing.total) || posts.length };
+}
+
+export async function loadArticle({ blogId, slug }) {
+  let id = blogId;
+  if (!id && slug) {
+    const listing = await asJson(URL_BLOGS("?limit=100"));
+    id = (listing.articles || []).find((a) => a.slug === slug)?.parent_id;
+    if (!id) return null;
+  }
+  if (!id) return null;
+  const r = await asJson(URL_BLOG(id)).catch(() => null);
+  if (!r?.article) return null;
+  const a = r.article;
+  return {
+    id: a.id, blogId: id, slug: a.slug, title: a.title, body: a.body,
+    image: a.image, excerpt: excerpt(a.description, 240),
+    date: articleDate(a), categoryId: r.category ?? null,
+    author: a.user?.name || "",
+  };
+}
+
 /* ---------- Images ---------- */
 export function img(path, size) {
   return selldoneImagePathToUrl(path, { shopId: SHOP.id, scope: "products", size });

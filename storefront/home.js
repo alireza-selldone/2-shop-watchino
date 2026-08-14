@@ -3,7 +3,7 @@
    Every image resolves from live XAPI through the central Selldone helper;
    the prototype's hardcoded CDN URLs are gone (5 of its 6 were 404). */
 
-import { loadCatalog, money, byId, catOf } from "./watchino-data.js";
+import { loadCatalog, money, byId, catOf, loadReviews } from "./watchino-data.js";
 import { cardHTML, esc } from "./app.js";
 
 /* ==========================================================================
@@ -196,6 +196,59 @@ function fillHome(cat) {
   setImg("[data-service-img]", byId(cat, 709384), "Leather-strap wristwatch on the workbench");
 }
 
+/* ---------- Reviews ----------
+   Every figure here is computed by summariseReviews() from the review list.
+   Nothing is typed in: change the six entries and the average, the bars and the
+   counts all follow. The label renders whenever the source is sample data. */
+function fillReviews(cat) {
+  const listEl = document.querySelector("[data-review-list]");
+  const sumEl = document.querySelector("[data-review-summary]");
+  const noteEl = document.querySelector("[data-review-note]");
+  if (!listEl) return;
+
+  const { reviews, average, total, counts, sample } = loadReviews(cat.products);
+
+  if (!total) {
+    listEl.innerHTML = `<p class="cap">No reviews yet.</p>`;
+    return;
+  }
+
+  if (sample && noteEl) {
+    noteEl.hidden = false;
+    noteEl.textContent = "Sample reviews, shown to demonstrate the layout. Not from real customers.";
+  }
+
+  sumEl.innerHTML = `
+    <div class="revsum__score">
+      <p class="revsum__avg">${average.toFixed(1)}<span>/5</span></p>
+      <p class="cap mb0">${stars(average)} · ${total} reviews</p>
+    </div>
+    <div class="revbars">
+      ${counts.map((c) => `
+        <div class="revbar">
+          <span class="revbar__n">${c.star}</span>
+          <span class="revbar__track"><span class="revbar__fill" style="width:${c.pct.toFixed(1)}%"></span></span>
+          <span class="revbar__c">${c.count}</span>
+        </div>`).join("")}
+    </div>`;
+
+  listEl.innerHTML = reviews.map((r) => `
+    <figure class="rev">
+      <p class="rev__stars" aria-label="${r.rating} out of 5">${stars(r.rating)}</p>
+      <blockquote>${esc(r.body)}</blockquote>
+      <figcaption class="cap">${esc(r.name)}${r.city ? " · " + esc(r.city) : ""}</figcaption>
+    </figure>`).join("");
+}
+
+/* Filled and empty stars, with the numeric value carried in an aria-label at
+   the call site — the glyphs are decoration, never the only indicator. */
+function stars(n) {
+  const full = Math.round(n);
+  return `<span class="stars" aria-hidden="true">${"★".repeat(full)}${"☆".repeat(5 - full)}</span>`;
+}
+
 document.addEventListener("catalog:ready", async () => {
-  fillHome(await loadCatalog());
+  const cat = await loadCatalog();
+  fillHome(cat);
+  fillReviews(cat);
 });

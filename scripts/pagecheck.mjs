@@ -9,7 +9,7 @@ import { chromium } from "playwright";
 
 const B = (process.argv[2] || "http://localhost:8788").replace(/\/+$/, "");
 const CONTENT = ["/about-us", "/terms", "/privacy", "/contact-us"];
-const ALL = ["/", "/shop.html", "/product.html?id=325698", "/checkout.html", ...CONTENT];
+const ALL = ["/", "/shop.html", "/product.html?id=325698", "/checkout.html", "/blog", "/article.html?id=31528", ...CONTENT];
 const EXPECTED_TOKENS = new Set(["SHOP_EMAIL", "SHOP_PHONE", "SHOP_ADDRESS", "COMPANY_REGISTRATION"]);
 
 let fails = 0;
@@ -76,7 +76,7 @@ for (const p of ALL) {
   }).map((a) => a.textContent.trim().slice(0, 30)));
   if (n.length) { fail(`${p}: ${n.length} stub link(s) — ${n.join(", ")}`); stubs += n.length; }
 }
-if (!stubs) pass("0 stub links across all 8 page states");
+if (!stubs) pass(`0 stub links across all ${ALL.length} page states`);
 
 /* 4 — Terms anchors scroll to the right section --------------------------- */
 /* Run each anchor on a COLD context. With fonts warm all three land perfectly;

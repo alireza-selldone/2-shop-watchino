@@ -1,12 +1,12 @@
 <!doctype html>
 <html lang="en">
-  <head>
+<head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>Reference — Watchino</title>
+    <title>Journal — Watchino</title>
     <meta
       name="description"
-      content="Watchino storefront: men's classic, women's collection, heritage &amp; leather, sport &amp; chronograph, diamond &amp; gold, and haute horlogerie timepieces."
+      content="Notes on choosing, wearing and looking after a mechanical watch."
     />
     <meta name="shop-name" content="Watchino" />
     <meta name="pajulina-app-name" content="Selldone Shop A1" />
@@ -32,7 +32,7 @@
     <link href="https://fonts.googleapis.com/css2?family=Bodoni+Moda:opsz,wght@6..96,400;6..96,500&family=Archivo:wght@400;500;600&family=Azeret+Mono:wght@400;500&display=swap" rel="stylesheet" />
     <link rel="stylesheet" href="styles.css" />
     <script type="module" src="app.js"></script>
-    <script type="module" src="product.js"></script>
+    <script type="module" src="blog.js"></script>
   </head>
   <body>
 
@@ -42,7 +42,7 @@
     <aside class="rail" aria-hidden="true">
       <span class="rail__label">WATCHINO</span>
       <div class="rail__ticks"><span class="rail__marker"></span></div>
-      <span class="rail__label" data-rail-ref>WATCHINO</span>
+      <span class="rail__label">EST. 1946</span>
     </aside>
 
     <div class="page">
@@ -79,21 +79,31 @@
         </div>
       </header>
 
-      <main id="main" tabindex="-1" class="section" style="padding-top:36px">
-        <div class="wrap" id="pdp"><div class="pdp__loading" role="status">Loading reference&hellip;</div></div>
-        <p class="wrap cap" data-catalog-error hidden style="color:var(--alert)"></p>
+      <main id="main" tabindex="-1">
+
+        <section class="pghead ink">
+          <div class="wrap">
+            <p class="eyebrow eyebrow--onink">The journal</p>
+            <h1 class="h1">Journal</h1>
+            <p class="pghead__meta" data-blog-count></p>
+          </div>
+        </section>
+
+        <div class="wrap"><div class="tickrule"></div></div>
+
+        <section class="section">
+          <div class="wrap">
+            <nav class="chips" data-blog-cats aria-label="Filter by category"></nav>
+            <p class="cap" data-blog-error hidden style="color:var(--alert)"></p>
+            <div class="posts" data-blog-list></div>
+            <div class="sempty" data-blog-empty hidden>
+              <p class="h3" style="margin-bottom:6px">No articles yet</p>
+              <p class="cap">When the journal is written, it appears here.</p>
+            </div>
+          </div>
+        </section>
+
       </main>
-
-      <section class="section ink">
-        <div class="wrap" id="reviews"></div>
-      </section>
-
-      <section class="section">
-        <div class="wrap">
-          <h2 class="h2" id="reltitle" style="margin-bottom:32px">Related references</h2>
-          <div class="pgrid" id="related"></div>
-        </div>
-      </section>
 
       <footer class="ft ink">
         <div class="wrap">
@@ -138,14 +148,6 @@
       </footer>
 
     </div><!-- /.page -->
-
-    <div class="buybar">
-      <div>
-        <p class="price mb0" style="font-size:16px">&nbsp;</p>
-        <p class="cap mb0">&nbsp;</p>
-      </div>
-      <button class="btn" type="button">Add to bag</button>
-    </div>
 
     <!-- Mobile navigation -->
     <div class="drawer ink" role="dialog" aria-modal="true" aria-label="Menu" aria-hidden="true">

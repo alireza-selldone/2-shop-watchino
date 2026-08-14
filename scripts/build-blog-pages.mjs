@@ -1,0 +1,103 @@
+/* Emit storefront/blog.html and storefront/article.html.
+
+   Same reason build-pages.mjs exists: the chrome is lifted from index.html so
+   the header, footer, rail and drawers cannot drift away from the rest of the
+   site. Run after changing index.html's chrome:  npm run build:pages
+*/
+import { readFileSync, writeFileSync } from "node:fs";
+import { dirname, join, resolve } from "node:path";
+import { fileURLToPath } from "node:url";
+
+const ROOT = resolve(join(dirname(fileURLToPath(import.meta.url)), ".."));
+const OUT = join(ROOT, "storefront");
+
+function chrome() {
+  const src = readFileSync(join(OUT, "index.html"), "utf8");
+  const rawHead = src.slice(src.indexOf("<head>"), src.indexOf("</head>"));
+  const head = rawHead.replace(/[ \t]*<script type="module" src="home\.js"><\/script>\r?\n/, "");
+  if (head === rawHead) throw new Error("home.js script tag not found in index.html head");
+  const top = src
+    .slice(src.indexOf("  <body>"), src.indexOf('<main id="main"'))
+    .replaceAll('href="#service"', 'href="index.html#service"');
+  return { head, top, tail: src.slice(src.indexOf("      </main>")) };
+}
+
+const PAGES = [
+  {
+    file: "blog.html",
+    script: "blog.js",
+    title: "Journal — Watchino",
+    desc: "Notes on choosing, wearing and looking after a mechanical watch.",
+    main: `<main id="main" tabindex="-1">
+
+        <section class="pghead ink">
+          <div class="wrap">
+            <p class="eyebrow eyebrow--onink">The journal</p>
+            <h1 class="h1">Journal</h1>
+            <p class="pghead__meta" data-blog-count></p>
+          </div>
+        </section>
+
+        <div class="wrap"><div class="tickrule"></div></div>
+
+        <section class="section">
+          <div class="wrap">
+            <nav class="chips" data-blog-cats aria-label="Filter by category"></nav>
+            <p class="cap" data-blog-error hidden style="color:var(--alert)"></p>
+            <div class="posts" data-blog-list></div>
+            <div class="sempty" data-blog-empty hidden>
+              <p class="h3" style="margin-bottom:6px">No articles yet</p>
+              <p class="cap">When the journal is written, it appears here.</p>
+            </div>
+          </div>
+        </section>
+
+`,
+  },
+  {
+    file: "article.html",
+    script: "article.js",
+    title: "Journal — Watchino",
+    desc: "An article from the Watchino journal.",
+    main: `<main id="main" tabindex="-1">
+
+        <article data-article>
+          <section class="pghead ink">
+            <div class="wrap">
+              <div class="pgcol">
+                <p class="eyebrow eyebrow--onink" data-article-cat>Journal</p>
+                <h1 class="h1" data-article-title>&nbsp;</h1>
+                <p class="pghead__meta" data-article-meta></p>
+              </div>
+            </div>
+          </section>
+
+          <div class="wrap"><div class="tickrule"></div></div>
+
+          <section class="section">
+            <div class="wrap">
+              <p class="cap" data-article-error hidden style="color:var(--alert)"></p>
+              <div class="artcover" data-article-cover hidden>
+                <img src="" alt="" width="1600" height="900">
+              </div>
+              <div class="prose" data-article-body></div>
+              <p style="margin-top:44px"><a class="btn btn--text" href="blog.html">← All articles</a></p>
+            </div>
+          </section>
+        </article>
+
+`,
+  },
+];
+
+const { head, top, tail } = chrome();
+for (const page of PAGES) {
+  const pageHead = head
+    .replace(/<title>.*?<\/title>/, `<title>${page.title}</title>`)
+    .replace(/(name="description"\s*\n\s*content=)"[^"]*"/, `$1"${page.desc}"`)
+    .replace('<script type="module" src="app.js"></script>',
+             `<script type="module" src="app.js"></script>\n    <script type="module" src="${page.script}"></script>`);
+  const out = `<!doctype html>\n<html lang="en">\n${pageHead}</head>\n${top}${page.main}${tail}`;
+  writeFileSync(join(OUT, page.file), out);
+  console.log(`  ${page.file.padEnd(16)}${out.length.toLocaleString().padStart(7)} bytes`);
+}

@@ -63,10 +63,10 @@
           <button class="burger mobonly" data-open="nav" aria-label="Open menu"><span></span></button>
           <a class="logo" href="index.html">Watch<span>i</span>no</a>
           <div class="hdr__act">
-            <button class="iconbtn" aria-label="Search">
+            <button class="iconbtn" type="button" data-open="search" aria-label="Search">
               <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="M16.5 16.5 21 21"/></svg>
             </button>
-            <button class="iconbtn" aria-label="Account">
+            <button class="iconbtn" type="button" data-open="account" aria-label="Account">
               <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="8" r="4"/><path d="M4 21c0-4 3.6-6 8-6s8 2 8 6"/></svg>
             </button>
             <button class="iconbtn" data-open="cart" aria-label="Open bag, 0 items">
@@ -199,6 +199,54 @@
         <figcaption class="lbox__cap"></figcaption>
       </figure>
     </div>
+
+
+
+    <!-- Search — client-side over the loaded catalogue -->
+
+    <aside class="sheet sheet--search" role="dialog" aria-modal="true" aria-label="Search the collection" aria-hidden="true">
+
+      <div class="sheet__hd">
+
+        <span class="eyebrow mb0">Search</span>
+
+        <button class="xbtn" data-close>Close</button>
+
+      </div>
+
+      <div class="sheet__pad">
+
+        <label class="sr" for="q">Search references</label>
+
+        <input id="q" type="search" autocomplete="off" placeholder="Reference, maker or collection" data-search-input data-autofocus />
+
+        <p class="cap" data-search-count style="margin-top:12px"></p>
+
+      </div>
+
+      <div class="sheet__body" data-search-results></div>
+
+    </aside>
+
+
+
+    <!-- Account -->
+
+    <aside class="sheet sheet--account" role="dialog" aria-modal="true" aria-label="Account" aria-hidden="true">
+
+      <div class="sheet__hd">
+
+        <span class="eyebrow mb0">Account</span>
+
+        <button class="xbtn" data-close>Close</button>
+
+      </div>
+
+      <div class="sheet__body" data-account-body></div>
+
+    </aside>
+
+
 
     <div class="scrim"></div>
   </body>

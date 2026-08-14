@@ -27,14 +27,14 @@ This project is a fully static Selldone storefront plus browser-side dashboard. 
   - `pajulina_storefront_oauth_tokens_v1`
   - `pajulina_dashboard_oauth_tokens_v1`
 - Do not add Node-only API routes for production features.
-- Existing storefront `/api/storefront/*` calls are browser-intercepted by `storefront/static-storefront-api.js` and translated to real XAPI requests.
-  - **Decided 13 Aug 2026: this shim is being removed.** Call `storefrontAuth.session()` and the
-    XAPI endpoints directly instead — translating a fake path to a real one is all the shim ever
-    did, and the indirection hides which XAPI call a feature actually makes. Not yet carried out;
-    the account/search wiring is the change that removes it. Until then the interception still
-    stands, and `dev-static.mjs` still answers `/api/storefront/*` with a 501 explaining that.
-  - Storefront search is client-side over the loaded catalogue, matching the reference app. Do not
-    add an XAPI search round-trip for 35 products.
+- **The `/api/storefront/*` shim is gone** (removed 14 Aug 2026). There is no
+  `storefront/static-storefront-api.js`; call `storefrontAuth.session()` and the XAPI
+  endpoints directly. Translating a fake path into a real one was all the shim ever did,
+  and the indirection hid which XAPI call a feature actually made. Do not reintroduce it.
+- Storefront search is client-side over the catalogue already in memory, matching the
+  reference app. 35 references do not justify a network round-trip per keystroke.
+- Storefront customer identity comes from `storefrontAuth.session()`, which reads
+  XAPI `/me` for the storefront context — never `api.selldone.com`.
 - Storefront order history is physical-only and loads from XAPI `GET /shops/@{shop}/basket/orders-PHYSICAL` with the `order-history` scope.
 - Storefront order detail loads from XAPI `GET /shops/@{shop}/baskets/{basket_id}` with the storefront customer token.
 - Storefront cart reads and mutations must use real Selldone XAPI. This shop sells physical products only, so cart state must load the physical basket from shop-info `baskets` and bill data. Basket item updates use `PUT /shops/@{shop}/basket/{product_id}` with the final `count`.

@@ -8,6 +8,7 @@ import {
   readBag, addToBag, removeFromBag, bagCount, bagLines, bagSubtotal,
   subscribe,
 } from "./watchino-data.js";
+import { storefrontAuth } from "../shared/auth-client.js";
 
 let CAT = null;
 
@@ -46,11 +47,13 @@ function initHeader() {
     scrim?.classList.add("is-on");
     document.documentElement.classList.add("is-locked");
     el.setAttribute("aria-hidden", "false");
-    focusables(el)[0]?.focus();
+    // The first focusable in a panel is its Close button. Where the panel has a
+    // field that is the point of opening it, send focus there instead.
+    (el.querySelector("[data-autofocus]") || focusables(el)[0])?.focus();
   };
   const closeAll = () => {
     let had = false;
-    document.querySelectorAll(".drawer,.cart,.filters").forEach((e) => {
+    document.querySelectorAll(".drawer,.cart,.filters,.sheet").forEach((e) => {
       if (e.classList.contains("is-open")) had = true;
       e.classList.remove("is-open");
       if (!e.classList.contains("filters")) e.setAttribute("aria-hidden", "true");
@@ -63,13 +66,18 @@ function initHeader() {
   document.querySelector('[data-open="nav"]')?.addEventListener("click", () => open(document.querySelector(".drawer")));
   document.querySelector('[data-open="cart"]')?.addEventListener("click", () => open(document.querySelector(".cart")));
   document.querySelector('[data-open="filters"]')?.addEventListener("click", () => open(document.querySelector(".filters")));
+  document.querySelector('[data-open="search"]')?.addEventListener("click", () => open(document.querySelector(".sheet--search")));
+  document.querySelector('[data-open="account"]')?.addEventListener("click", () => {
+    open(document.querySelector(".sheet--account"));
+    renderAccount();   // refetches, so a session that expired while the tab sat open shows as signed out
+  });
   document.querySelectorAll("[data-close]").forEach((b) => b.addEventListener("click", closeAll));
   scrim?.addEventListener("click", closeAll);
 
   addEventListener("keydown", (e) => {
     if (e.key === "Escape") { closeAll(); closeLightbox(); return; }
     if (e.key !== "Tab") return;
-    const panel = document.querySelector(".drawer.is-open,.cart.is-open,.lbox.is-open");
+    const panel = document.querySelector(".drawer.is-open,.cart.is-open,.lbox.is-open,.sheet.is-open");
     if (!panel) return;
     trapTab(e, panel);
   });
@@ -292,6 +300,122 @@ function initNewsletter() {
   });
 }
 
+/* ---------- Search ---------- */
+/* Client-side over the catalogue already in memory, matching the reference app.
+   35 references do not justify a network round-trip per keystroke, and the
+   storefront has the whole list loaded before the button can be clicked. */
+function initSearch() {
+  const sheet = document.querySelector(".sheet--search");
+  if (!sheet) return;
+  const input = sheet.querySelector("[data-search-input]");
+  const out = sheet.querySelector("[data-search-results]");
+  const count = sheet.querySelector("[data-search-count]");
+
+  const norm = (v) => String(v ?? "").toLowerCase().normalize("NFD").replace(/\p{Diacritic}/gu, "");
+
+  function run() {
+    if (!CAT) { count.textContent = "Loading the collection…"; return; }
+    const q = norm(input.value).trim();
+    if (!q) {
+      out.innerHTML = "";
+      count.textContent = `${CAT.products.length} references in the collection`;
+      return;
+    }
+    // Every term must appear somewhere in the record, so "molino gold" narrows
+    // rather than widening the way an OR match would.
+    const terms = q.split(/\s+/);
+    const hits = CAT.products.filter((p) => {
+      const hay = norm([p.name, p.brand, p.catName, p.id].join(" "));
+      return terms.every((t) => hay.includes(t));
+    });
+
+    count.textContent = hits.length === 1 ? "1 reference" : `${hits.length} references`;
+    out.innerHTML = hits.length
+      ? hits.map((p) => `<a class="sres" href="product.html?id=${p.id}">
+          <span class="sres__art"><img src="${p.image}" alt="" loading="lazy" width="56" height="56"></span>
+          <span><b>${esc(p.name)}</b><span class="cap">${esc(p.catName)}${p.brand ? " · " + esc(p.brand) : ""}</span></span>
+          <span class="price">${money(p.price)}</span>
+        </a>`).join("")
+      : `<div class="sempty">
+           <p class="h3" style="margin-bottom:6px">Nothing matches “${esc(input.value.trim())}”</p>
+           <p class="cap">Try a maker, a collection, or part of a reference name.</p>
+         </div>`;
+  }
+
+  input.addEventListener("input", run);
+  // The catalogue may still be loading when the sheet is first opened.
+  document.addEventListener("catalog:ready", run);
+  run();
+}
+
+/* ---------- Account ---------- */
+/* Authorization Code + PKCE against selldone.com/oauth, public client. The
+   session is read through storefrontAuth directly: the /api/storefront/* shim
+   only ever translated a fake path into this call. */
+async function renderAccount() {
+  const body = document.querySelector("[data-account-body]");
+  if (!body) return;
+  body.innerHTML = `<p class="cap" style="padding:24px 0">Checking your session…</p>`;
+
+  let s;
+  try {
+    s = await storefrontAuth.session();
+  } catch (err) {
+    console.error("[watchino] session lookup failed", err);
+    body.innerHTML = `<div class="acct">
+      <p class="lede" style="margin-bottom:20px">Your session could not be checked just now.</p>
+      <button class="btn btn--full" type="button" data-signin>Sign in</button>
+    </div>`;
+    wire(body);
+    return;
+  }
+
+  if (!s.authenticated) {
+    body.innerHTML = `<div class="acct">
+      <p class="lede" style="margin-bottom:8px">Sign in to see your orders and saved addresses.</p>
+      <p class="cap" style="margin-bottom:24px">Watchino uses your Selldone account. This is a demonstration storefront — no order is ever placed.</p>
+      <button class="btn btn--full" type="button" data-signin>Sign in with Selldone</button>
+    </div>`;
+    wire(body);
+    return;
+  }
+
+  const u = s.user || {};
+  body.innerHTML = `<div class="acct">
+    <div class="acct__id">
+      ${u.avatar ? `<img class="acct__av" src="${esc(u.avatar)}" alt="" width="52" height="52">` : `<span class="acct__av"></span>`}
+      <span>
+        <span class="acct__nm">${esc(u.name || "Signed in")}</span>
+        ${u.email ? `<span class="cap" style="display:block">${esc(u.email)}</span>` : ""}
+      </span>
+    </div>
+    ${u.email ? `<div class="acct__row"><span>Email</span><span>${esc(u.email)}</span></div>` : ""}
+    <div class="acct__row"><span>Shop</span><span>${esc(s.shop || "Watchino")}</span></div>
+    <p class="cap" style="margin:22px 0">Order history is not part of this demonstration.</p>
+    <button class="btn btn--line btn--full" type="button" data-signout>Sign out</button>
+  </div>`;
+  wire(body);
+
+  function wire(root) {
+    root.querySelector("[data-signin]")?.addEventListener("click", (e) => {
+      e.currentTarget.disabled = true;
+      storefrontAuth.startLogin(location.pathname + location.search);
+    });
+    root.querySelector("[data-signout]")?.addEventListener("click", () => storefrontAuth.logout(location.pathname));
+  }
+}
+
+/* Reflect the signed-in state on the header button without opening the sheet,
+   so the control is not silent about state it already knows. */
+async function markAccountState() {
+  const btn = document.querySelector('[data-open="account"]');
+  if (!btn) return;
+  try {
+    const s = await storefrontAuth.session();
+    if (s.authenticated) btn.setAttribute("aria-label", `Account — signed in as ${s.user?.name || s.user?.email || "you"}`);
+  } catch { /* the button still opens the sheet, which reports the failure */ }
+}
+
 /* ---------- Deep-link re-anchor ---------- */
 /* The browser jumps to a #hash before the web fonts have loaded. Bodoni and
    Archivo are metrically different from the fallbacks, so the document reflows
@@ -322,6 +446,8 @@ document.addEventListener("DOMContentLoaded", async () => {
   initAcc();
   initDeepLink();
   initNewsletter();
+  initSearch();
+  markAccountState();
   document.querySelector(".lbox__x")?.addEventListener("click", closeLightbox);
   document.querySelector(".lbox")?.addEventListener("click", (e) => {
     if (e.target.classList.contains("lbox")) closeLightbox();

@@ -95,13 +95,6 @@ function serveSourceFile(request, response, url) {
     serveWithFallback(response, SOURCE_ROOTS.callback, pathname.slice("/callback/".length) || "index.html", "index.html");
     return;
   }
-  if (pathname.startsWith("/api/storefront/")) {
-    sendJson(response, 501, {
-      error: "Static storefront API is browser-intercepted in local static mode.",
-      hint: "Load the storefront app so /api/storefront/* requests are handled by storefront/static-storefront-api.js.",
-    });
-    return;
-  }
   serveWithFallback(response, SOURCE_ROOTS.storefront, pathname.slice(1) || "index.html", "index.html");
 }
 

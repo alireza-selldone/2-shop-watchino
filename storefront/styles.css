@@ -1080,41 +1080,40 @@ html.js-reveal .reveal.is-in{opacity:1;transform:none;}
 @media (min-width:1024px){ .hero__media img{object-position:68% 50%;} }
 @media (min-width:1440px){ .hero__media img{object-position:60% 50%;} }
 
-/* --- Hero hotspots --------------------------------------------------------- */
-.hero__spots{position:absolute;inset:0;z-index:3;}
-.hero__spot{position:absolute;transform:translate(-50%,-50%);}
-.hero__pin{
-  width:var(--tap);height:var(--tap);border-radius:50%;
-  display:grid;place-items:center;color:var(--dial);
-  background:rgba(22,25,29,.42);border:1px solid rgba(233,236,238,.55);
-  backdrop-filter:blur(2px);
-  transition:background var(--fast) var(--ease),border-color var(--fast) var(--ease),transform var(--fast) var(--ease);
-}
-.hero__pin span{font-size:19px;line-height:1;transform:translateY(-1px);}
-.hero__pin:hover,.hero__pin:focus-visible{background:var(--blued);border-color:var(--blued);transform:scale(1.06);}
+/* --- Hero markers -----------------------------------------------------------
+   An 8px dot that marks the watch without covering it. The previous 44px pin
+   was larger than the dial it pointed at, so the product disappeared behind the
+   thing meant to sell it.
 
-.hero__card{
-  position:absolute;left:50%;bottom:calc(100% + 12px);transform:translateX(-50%) translateY(6px);
-  width:264px;display:flex;gap:14px;align-items:center;
-  background:var(--dial-pure);color:var(--graphite);
-  border:1px solid var(--rule);border-radius:var(--radius);padding:12px;
-  opacity:0;visibility:hidden;pointer-events:none;
-  transition:opacity var(--fast) var(--ease),transform var(--fast) var(--ease),visibility var(--fast);
+   Not interactive: there is no off-subject position in this photograph for the
+   woman's label (x 80-95% at her wrist height is arm, dress and lit background;
+   the only dark strip, 96-99%, is cropped away at 1280 and below). Both
+   references are ordinary cards under the photograph instead. */
+.hero__spots{position:absolute;inset:0;z-index:3;pointer-events:none;}
+.hero__dot{
+  position:absolute;width:8px;height:8px;border-radius:50%;
+  transform:translate(-50%,-50%);
+  background:var(--dial);
+  box-shadow:0 0 0 1px rgba(22,25,29,.55), 0 0 12px 3px rgba(233,236,238,.35);
 }
-.hero__spot.is-on .hero__card{opacity:1;visibility:visible;transform:translateX(-50%) translateY(0);}
-.hero__card__art{width:64px;height:64px;flex:0 0 64px;background:var(--dial);position:relative;overflow:hidden;}
-.hero__card__art img{position:absolute;inset:4px;width:calc(100% - 8px);height:calc(100% - 8px);object-fit:contain;}
-.hero__card__txt{display:flex;flex-direction:column;gap:3px;min-width:0;}
-.hero__card__name{font-family:var(--display);font-size:15px;line-height:1.2;}
-.hero__card__cta{font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:var(--blued);}
-/* Spots near the right edge would push their card off-screen. */
-.hero__spot:last-child .hero__card{left:auto;right:0;transform:translateX(0) translateY(6px);}
-.hero__spot:last-child.is-on .hero__card{transform:translateX(0) translateY(0);}
+/* A slow pulse says "look here" without moving anything the eye is reading. */
+@media (prefers-reduced-motion:no-preference){
+  .hero__dot::after{
+    content:"";position:absolute;inset:-5px;border-radius:50%;
+    border:1px solid rgba(233,236,238,.5);
+    animation:dotring 3.6s var(--ease) infinite;
+  }
+  @keyframes dotring{
+    0%   {transform:scale(.6);opacity:0;}
+    35%  {opacity:.8;}
+    100% {transform:scale(1.5);opacity:0;}
+  }
+}
 
-@media (prefers-reduced-motion:reduce){
-  .hero__pin,.hero__card{transition:none;}
-  .hero__pin:hover,.hero__pin:focus-visible{transform:none;}
-}
+/* The two references under the photograph. Shown at every width now, not only
+   on mobile, because the hotspots they replace could not be placed cleanly. */
+.heromob{padding-top:clamp(40px,5vw,64px);}
+.heromob .pgrid{grid-template-columns:repeat(2,1fr);gap:clamp(18px,2vw,32px);max-width:760px;}
 
 /* --- Hero below 768 --------------------------------------------------------
    A 16:9 frame is ~219px tall at 390px wide, and the wrists are 15% of the
@@ -1127,7 +1126,7 @@ html.js-reveal .reveal.is-in{opacity:1;transform:none;}
   .hero__media img{object-position:74% 42%;}
   .hero__grid{padding-block:40px 8px;}
   .hero__spots{display:none;}
-  .heromob .pgrid{grid-template-columns:repeat(2,1fr);gap:18px;}
+  
 }
 
 /* Inline text button that reads as a link but is a real <button>. */
@@ -1138,3 +1137,22 @@ html.js-reveal .reveal.is-in{opacity:1;transform:none;}
 /* Load more. A button, not infinite scroll — the footer carries seven real
    destinations and infinite scroll takes it away from people. */
 .loadmore{display:flex;flex-direction:column;align-items:center;gap:14px;padding:52px 0 8px;}
+
+/* --- Header nav at the narrow end of desktop --------------------------------
+   Adding Journal made four items where three fitted. Below ~1200 "Haute
+   Horlogerie" and "Client Care" wrapped to two lines and sat hard against the
+   wordmark — no overflow, no contrast failure, so the audit passed while the
+   header read as broken. Tighten the tracking and gap, and forbid wrapping so
+   the failure would be visible rather than silent. */
+.nav a{white-space:nowrap;}
+@media (max-width:1340px){
+  .nav{gap:20px;}
+  .nav a{font-size:11px;letter-spacing:.08em;}
+}
+@media (max-width:1120px){
+  .nav{gap:13px;}
+  .nav a{font-size:10.5px;letter-spacing:.03em;}
+  /* Client Care lives in the footer too; at this width the wordmark needs the
+     room more than a fourth nav item does. */
+  .nav a:last-child{display:none;}
+}

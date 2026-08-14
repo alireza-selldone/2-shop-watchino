@@ -205,15 +205,19 @@ function fillHome(cat) {
   setImg("[data-service-img]", byId(cat, 709384), "Leather-strap wristwatch on the workbench");
 }
 
-/* ---------- Hero hotspots ----------
-   Resolved from the live catalogue by id: the name and price are never written
-   into the markup, so neither can go stale.
+/* ---------- Hero markers ----------
+   The interactive hotspots were removed. Measured against the photograph, the
+   only label position anywhere in frame that sits on empty dark ground and is
+   reachable without a leader crossing a subject is (51%, 74%) — and it serves
+   the man's watch. For the woman's there is none:
 
-   Hover and focus reveal the same card — hover-only would make the whole
-   feature invisible to a keyboard. Below 768 the spots are not rendered at all
-   and the same references appear as ordinary cards instead. */
-const MOBILE = () => matchMedia("(max-width: 767px)").matches;
+     at her wrist height, x 80-95% is continuously lit (mean 36-148) — her arm,
+     her dress, then candlelit background. The only dark strip is x 96-99%, and
+     object-fit crops that away entirely at 1280 and 1024.
 
+   Rather than crowd a label onto her dress, both watches now carry an 8px dot
+   that marks without covering, and both references appear as ordinary cards
+   below the photograph at every width — the treatment mobile already used. */
 function fillHotspots(cat) {
   const layer = document.querySelector("[data-hero-spots]");
   const mob = document.querySelector("[data-hero-mob]");
@@ -226,51 +230,47 @@ function fillHotspots(cat) {
 
   if (!found.length) { layer.hidden = true; if (mob) mob.hidden = true; return; }
 
-  const draw = () => {
-    if (MOBILE()) {
-      layer.hidden = true;
-      layer.innerHTML = "";
-      if (mob && mobList) {
-        mobList.innerHTML = found.map((h) => cardHTML(h.p)).join("");
-        mob.hidden = false;
-      }
-      return;
-    }
-    if (mob) mob.hidden = true;
-    layer.hidden = false;
-    layer.innerHTML = found.map((h) => `
-      <div class="hero__spot" style="left:${h.x}%;top:${h.y}%">
-        <button class="hero__pin" type="button"
-                aria-label="${esc(h.p.name)}, ${money(h.p.price)} — view reference"
-                aria-expanded="false" data-goto="product.html?id=${h.p.id}">
-          <span aria-hidden="true">+</span>
-        </button>
-        <span class="hero__card" role="presentation">
-          <span class="hero__card__art"><img src="${h.p.image}" alt="" loading="lazy" width="120" height="120"></span>
-          <span class="hero__card__txt">
-            <span class="hero__card__name">${esc(h.p.name)}</span>
-            <span class="price">${money(h.p.price)}</span>
-            <span class="hero__card__cta">View reference →</span>
-          </span>
-        </span>
-      </div>`).join("");
+  /* Decorative only: aria-hidden, no pointer events. The card below each is the
+     accessible, tappable route to the product — a marker that reveals something
+     on hover would be unreachable by keyboard and invisible on touch. */
+  layer.hidden = false;
+  layer.setAttribute("aria-hidden", "true");
+  layer.innerHTML = found.map(() => `<span class="hero__dot"></span>`).join("");
 
-    layer.querySelectorAll(".hero__pin").forEach((btn) => {
-      const spot = btn.closest(".hero__spot");
-      const open = (v) => {
-        spot.classList.toggle("is-on", v);
-        btn.setAttribute("aria-expanded", String(v));
-      };
-      btn.addEventListener("focus", () => open(true));
-      btn.addEventListener("blur", () => open(false));
-      btn.addEventListener("mouseenter", () => open(true));
-      spot.addEventListener("mouseleave", () => open(false));
-      btn.addEventListener("click", () => { location.href = btn.dataset.goto; });
+  /* The coordinates are percentages of the PHOTOGRAPH, but the overlay is the
+     size of the element box — and object-fit:cover crops the two apart. Placing
+     the dots by percentage put the woman's 68px off her wrist at 1024. Project
+     image space into box space, the same maths herocheck.mjs asserts with. */
+  const img = document.querySelector("[data-hero-img]");
+  const dots = [...layer.querySelectorAll(".hero__dot")];
+  const place = () => {
+    if (!img.naturalWidth) return;
+    const r = img.getBoundingClientRect();
+    if (!r.width) return;
+    const cs = getComputedStyle(img);
+    const [ox, oy = "50%"] = cs.objectPosition.split(" ");
+    const pc = (v, px) => (v.endsWith("%") ? parseFloat(v) : (parseFloat(v) / px) * 100);
+    const scale = Math.max(r.width / img.naturalWidth, r.height / img.naturalHeight);
+    const dispW = img.naturalWidth * scale, dispH = img.naturalHeight * scale;
+    const offX = (r.width - dispW) * (pc(ox, r.width) / 100);
+    const offY = (r.height - dispH) * (pc(oy, r.height) / 100);
+    found.forEach((h, i) => {
+      const x = offX + (h.x / 100) * dispW;
+      const y = offY + (h.y / 100) * dispH;
+      const inside = x > 0 && x < r.width && y > 0 && y < r.height;
+      dots[i].style.left = `${x}px`;
+      dots[i].style.top = `${y}px`;
+      dots[i].hidden = !inside;   // a dot cropped out of frame is not drawn
     });
   };
+  if (img.complete && img.naturalWidth) place();
+  img.addEventListener("load", place);
+  addEventListener("resize", place);
 
-  draw();
-  addEventListener("resize", draw);
+  if (mob && mobList) {
+    mobList.innerHTML = found.map((h) => cardHTML(h.p)).join("");
+    mob.hidden = false;
+  }
 }
 
 /* ---------- Reviews ----------

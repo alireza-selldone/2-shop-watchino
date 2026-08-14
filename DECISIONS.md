@@ -19,59 +19,120 @@ real account. **Sign in on production and open the account panel.** If orders
 appear, it is done. If the call 4xxs, the panel says "Your orders could not be
 loaded just now" and logs the reason to the console.
 
-**2. The hero photograph is a different register from the rest of the site.**
-Covered in its own section below. It is not a bug, but it is the thing most
-likely to make you say "no, put it back".
+**2. The hero's leader-line markers could not be built as briefed.** There is no
+off-subject label position for the woman's watch anywhere in the photograph —
+measured, not guessed. Both watches now carry an 8px dot and both references
+appear as cards below. Full reasoning in the hero section.
+
+**3. The hero photograph is a different register from the rest of the site.**
+It is not a bug, but it is the thing most likely to make you say "put it back".
 
 ---
 
-## The hero
+## The hero markers — the briefed design could not be built
 
-**Kept the photograph, no scrim.** The image's left ~40% is genuinely near-black,
-measured rather than assumed, so the copy sits on it unaided. `herocheck.mjs`
-fails the build if any gradient appears inside `.hero`, because a scrim would be
-a symptom of a bad crop rather than a fix for one.
+You asked for a dot on the watch, a leader line out to empty space, and the
+interactive label at the end of that line: man down-left, woman right past her
+shoulder. **The man's works. The woman's has nowhere to go.**
 
-**Hotspot coordinates were measured, not taken from the brief.** The purple dials
-are the only strongly purple pixels in an otherwise black-and-warm frame, so
-locating them was a pixel search: man **65.4%, 57.5%**; woman **80.7%, 54.6%**.
-Your estimates (66/57, 81/54) were within a percent — I used the measured values
-because the check depends on them being right.
+I measured the photograph rather than eyeballing it. At her wrist height:
 
-**`object-position` steps across three breakpoints** — 60% at ≥1440, 68% at
-≥1024, 72% below. The woman's wrist at 80.7% is the constraint: as the viewport
-narrows, `cover` crops the sides and hers leaves first. At 1024 it sits at 88% of
-the frame, still inside with room. This is the thing that will break if the image
-is ever swapped, which is why `check:hero` exists and runs at all three widths.
+```
+x 78-79%   dark (the corridor between the couple)
+x 80-95%   continuously lit, mean 36-148 — her arm, her dress, then candlelight
+x 96-99%   dark, but object-fit crops it away entirely at 1280 and at 1024
+```
 
-**Mobile drops the hotspots entirely**, as instructed, and shows the same two
-references as ordinary cards under a 4:5 crop. Nothing clever was attempted.
+Then I searched the whole frame for any 23%×8.5% label box containing no pixel
+brighter than 45, at any distance from her dial. Six positions exist, all along
+the top edge, ~27% away — and a leader to the nearest of them samples 151, 170,
+162, 164, 173 along its path. It runs straight across her head and shoulder.
 
-**The register question, honestly.** The old hero was a product plate on
-graphite with a soft halo: quiet, gallery-like, and of a piece with the six
-collection tiles, the three price registers and the salon section below it. Those
-are all *object* photography on flat ground.
+Down-left into the lower band fails too: every candidate box there contains a
+highlight of 206-238, which is the man's cuff or the candle.
 
-The new hero is a **lifestyle photograph with human models**, which is a
-different genre — it is advertising, and advertising is a register the rest of
-the site deliberately avoids. `PLAYBOOK.md` records "gallery, not funnel" as a
-rule, and a couple in evening dress is closer to funnel than gallery.
+So there is **exactly one** clean off-subject label position in this
+photograph — (51%, 74%) — and it serves the man's watch.
 
-Does the page still read as one thing? **Partly.** Three things hold it together:
-the frame is near-black so it shares the graphite ground; the copy, type and
-running-seconds detail are unchanged; and the hotspots are quiet, which keeps it
-from feeling like a banner ad. What does *not* hold: it is the only photograph on
-the site with a person in it, and the eye now goes to a face rather than to a
-watch. Scrolling from the hero into the collection grid is a genre change, and
-you feel it.
+Your rule for this case was explicit: *"say so rather than cramming it in… drop
+hotspots and show the two product cards below, the way mobile already does."*
+That is what I did, at every width rather than at some widths, because the
+constraint is the photograph and not the viewport. A label on the man alone
+would read as a bug on the woman.
+
+**What shipped:** an 8px dot on each watch — marking without covering, which was
+your original complaint — non-interactive and `aria-hidden`, with
+`pointer-events: none`. Both references appear as ordinary product cards
+directly beneath the photograph at every width, captioned "The two references in
+the photograph". Accessible by default, no hover, nothing over the couple.
+
+**If you want the leader-line design**, the photograph has to change: the woman
+needs empty dark frame beside her, which means either more space at the right of
+the composition or her wrist further from her body. It is a shot-list note, not
+a CSS one.
+
+### A real bug this uncovered
+
+The old 44px pins were positioned with CSS percentages on an overlay the size of
+the element box. The coordinates are percentages of the *photograph*, and
+`object-fit: cover` crops the two apart — so the woman's pin sat **68px off her
+wrist at 1024**. It looked right at 1440 by luck of the crop, and `check:hero`
+did not catch it because that check does the projection maths itself and
+compares against the same numbers, rather than reading where the marker actually
+landed. The dots now project image space into box space in JS, and a dot cropped
+out of frame is not drawn at all. Verified at 0px offset at 1440, 1280 and 1024.
+
+That is a seventh instance of the same species, and the most instructive one:
+the check and the code shared an assumption, so the check could not see the bug.
+Only screenshotting and looking found it — which is exactly why you asked for
+screenshots.
+
+### While looking at those screenshots
+
+Adding **Journal** to the header made four nav items where three fitted. Below
+~1200px "Haute Horlogerie" and "Client Care" wrapped to two lines and sat hard
+against the wordmark. No overflow, no contrast failure — so the 110-state audit
+passed while the header read as broken. Tracking and gap tighten from 1340px,
+"Client Care" drops from the nav below 1120px (it is in the footer), and
+`white-space: nowrap` makes any future crowding visible rather than silent.
+Gap to the wordmark is now 56-126px across desktop, with nothing wrapped.
+
+---
+
+## The hero photograph: does the page still read as one thing?
+
+Partly, and no more than that.
+
+The old hero was a product plate on graphite with a soft halo — quiet,
+gallery-like, and of a piece with the six collection tiles, the three price
+registers and the salon section below it. Those are all *object* photography on
+flat ground.
+
+The new hero is a lifestyle photograph with human models, which is a different
+genre. It is advertising, and advertising is the register the rest of the site
+deliberately avoids — `PLAYBOOK.md` records "gallery, not funnel" as a rule, and
+a couple in evening dress is closer to funnel than gallery.
+
+Three things hold it together: the frame is near-black so it shares the graphite
+ground; the copy, type and running-seconds detail are unchanged; and the markers
+are now 8px dots rather than badges, so nothing shouts. What does not hold: it
+is the only photograph on the site containing a person, and the eye goes to a
+face rather than to a watch. Scrolling from the hero into the collection grid is
+a genre change and you feel it.
 
 My honest read: **the hero is now the best-looking thing on the page and the
-least like the rest of it.** If the goal is a demo that stops a shop owner
-scrolling, it wins. If the goal is the coherent gallery the rest of the site
-argues for, the old plate was more correct. I would keep it and bring one more
-photograph of this kind further down the page — the salon section is the obvious
-place — so it reads as a deliberate second voice rather than a single outlier.
-I did not do that unprompted because it is a design decision, not a fix.
+least like the rest of it.** If the goal is stopping a shop owner mid-scroll, it
+wins. If the goal is the coherent gallery the rest of the site argues for, the
+old plate was more correct. I would keep it and add one more photograph of this
+kind further down — the salon section is the obvious place — so it reads as a
+deliberate second voice rather than a single outlier. I did not do that
+unprompted because it changes the design rather than implementing it.
+
+The two product cards now sitting under the photograph help more than I
+expected, incidentally: they pull the eye back to objects on flat ground
+immediately after the models, which softens the transition into the grid.
+
+---
 
 ---
 

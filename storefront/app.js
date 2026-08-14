@@ -20,7 +20,7 @@ export function cardHTML(p) {
     </div>
     <p class="eyebrow" style="margin-bottom:6px">${esc(p.catName)}</p>
     <span class="pcard__name">${esc(p.name)}</span>
-    <p class="price mb0">${money(p.price)}</p>
+    <p class="price mb0">${p.range?.varies ? `<span class="price__from">from</span> ${money(p.range.from)}` : money(p.price)}</p>
   </a>`;
 }
 

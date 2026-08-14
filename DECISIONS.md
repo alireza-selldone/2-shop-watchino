@@ -36,6 +36,56 @@ push. Disconnecting it is a dashboard action.
 
 ---
 
+## Variants: the allowlist was ours, and it was eating real data
+
+`products/list` carries **two** variant arrays. `variants` is a distinct-values
+summary — colour, image, nothing else. `product_variants` is the real thing:
+id, sku, colour, image, and its own price, discount and stock. We were reading
+the summary, but that was not the bug.
+
+The bug was a hardcoded `FINISH` allowlist in `watchino-data.js`, written for an
+earlier catalogue. On 709761 it kept **1 of 5** real variants — one lost purely
+to case, `#b76e79` in the list against `#B76E79` in the data — so the page
+announced "a single finish is recorded" for a reference sold in five. Seven
+products were affected. It is deleted, not replaced with a smarter filter: a
+colour that looks wrong is shop data to fix in Selldone, not something the
+storefront should hide.
+
+**The serious consequence was the price.** 709761 ranges $42,500–$58,900 and we
+showed $42,500 flat — a figure the customer would not be charged, understated by
+**$16,400**. Two products are affected, both hero references. Cards now show
+"from $42,500" when variants differ, and the product page shows the selected
+variant's real price, stock and SKU.
+
+**Swatches: image where available, colour circle otherwise.** Re-measured at
+**15.2%** of the catalogue carrying variant images — under the 30% threshold on
+paper, but those ten references are the ones customers reach from the hero, so
+the middle band's behaviour is what ships.
+
+**No colour names exist.** There is no `name`, `title` or `label` on either
+array. Selldone's own storefront generates "Dark purple" from the hex at render
+time. Using one here would mean shipping a hex→name mapping, which is invented
+data, so the accessible label stays the hex and the visible "Finish 2 of 5"
+ordinal keeps colour from being the only indicator.
+
+### Stale variant_ids on the Selldone side — worth cleaning up
+
+`images[]` carries a `variant_id` that would be the natural way to swap the
+gallery. On 709761 those ids point at a variant set that no longer exists:
+
+```
+images[].variant_id   1399688, 1399689, 1399690, 1399691
+product_variants[].id 1399696, 1399697, 1399698, 1399699, 1399700
+```
+
+Not one matches. They are left over from an earlier variant set, and trusting
+them would silently show the wrong photograph for a finish — the kind of fault
+that looks fine until someone compares the picture to the name. The gallery
+matches on **image URL** instead. Worth re-linking the images to the live
+variants in Selldone; the storefront will keep working either way.
+
+---
+
 ## New photograph, new products (15 Aug)
 
 **Both watches changed to steel rectangles, so every coordinate was re-derived.**

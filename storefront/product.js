@@ -4,8 +4,8 @@
    and a reviews block driven by real rating data. */
 
 import {
-  loadCatalog, loadProduct, money, byId, catOf,
-  finishesOf, swatchStyle, swatchLabel, isComposite,
+  loadCatalog, loadProduct, money, byId, catOf, img,
+  variantsOf, swatchStyle, swatchLabel, isComposite,
   CAT_BLURB, addToBag,
 } from "./watchino-data.js";
 import { cardHTML, esc, initAcc, openLightbox } from "./app.js";
@@ -109,8 +109,12 @@ async function initPDP(cat) {
     console.warn("[watchino] gallery fallback to icon", e);
   }
 
-  const finishes = finishesOf(p.raw);
-  const showSwatches = finishes.length >= 2;
+  /* Every variant the shop defines, not a filtered subset. */
+  const variants = variantsOf(p.raw);
+  const showSwatches = variants.length >= 2;
+  /* A variant's own price/stock when it sets one, the product's otherwise. */
+  const priceOf = (v) => (v && v.price > 0 ? v.price - (v.discount || 0) : p.price);
+  const stockOf = (v) => (v && v.qty ? v.qty : p.qty);
   const rows = specRows(p.spec);
   const railRef = document.querySelector("[data-rail-ref]");
   if (railRef) railRef.textContent = `REF ${p.id}`;
@@ -135,7 +139,7 @@ async function initPDP(cat) {
       <h1 class="h1">${esc(p.name)}</h1>
       <p class="ref">REF. ${p.id}${p.brand ? ` &middot; ${esc(p.brand.toUpperCase())}` : ""}</p>
 
-      <p class="price" style="font-size:24px;margin:22px 0 0">${money(p.price)}${p.was ? `<s>${money(p.was)}</s>` : ""}</p>
+      <p class="price" style="font-size:24px;margin:22px 0 0" data-price>${money(showSwatches ? priceOf(variants[0]) : p.price)}${p.was ? `<s>${money(p.was)}</s>` : ""}</p>
       <p class="cap" style="margin-top:6px">Duties and taxes calculated at checkout</p>
 
       <div class="pline"></div>
@@ -143,21 +147,24 @@ async function initPDP(cat) {
       ${showSwatches ? `
       <p class="eyebrow mb0" style="margin-bottom:14px">Case &amp; strap</p>
       <div class="swatches" role="radiogroup" aria-label="Case and strap finish">
-        ${finishes.map((col, i) => `
-          <button class="sw${i ? "" : " is-on"}" type="button" role="radio"
+        ${variants.map((v, i) => `
+          <button class="sw${v.image ? " sw--img" : ""}${i ? "" : " is-on"}" type="button" role="radio"
                   aria-checked="${i ? "false" : "true"}"
-                  data-i="${i}" data-hex="${esc(col)}"
-                  style="${swatchStyle(col)}"
-                  aria-label="Finish ${i + 1} of ${finishes.length}, ${esc(swatchLabel(col))}"></button>`).join("")}
+                  data-i="${i}"
+                  ${v.image ? "" : `style="${swatchStyle(v.color)}"`}
+                  aria-label="Finish ${i + 1} of ${variants.length}, ${esc(swatchLabel(v.color))}">
+            ${v.image ? `<img src="${esc(img(v.image))}" alt="" width="60" height="60" loading="lazy">
+              <span class="sw__dot" aria-hidden="true" style="${swatchStyle(v.color)}"></span>` : ""}
+          </button>`).join("")}
       </div>
-      <p class="swname mb0">Finish <span class="swhex" data-sw-hex>${esc(finishes[0])}</span></p>
-      <p class="swpos" data-sw-pos>Finish 1 of ${finishes.length}</p>
+      <p class="swname mb0">Finish <span class="swhex" data-sw-hex>${esc(variants[0].color)}</span>${variants[0].sku ? ` <span class="swsku" data-sw-sku>${esc(variants[0].sku)}</span>` : `<span class="swsku" data-sw-sku hidden></span>`}</p>
+      <p class="swpos" data-sw-pos>Finish 1 of ${variants.length}</p>
       ` : `
       <p class="eyebrow mb0" style="margin-bottom:8px">Case &amp; strap</p>
       <p class="cap" style="margin-bottom:4px">A single finish is recorded for this reference.</p>
       `}
 
-      <p class="stock"><i class="dot"></i> ${p.qty > 0 ? `${p.qty} in stock &middot; ships within 3 working days` : "Currently unavailable"}</p>
+      <p class="stock" data-stock><i class="dot"></i> ${(showSwatches ? stockOf(variants[0]) : p.qty) > 0 ? `${showSwatches ? stockOf(variants[0]) : p.qty} in stock &middot; ships within 3 working days` : "Currently unavailable"}</p>
 
       <div class="stack">
         <button class="btn btn--full" type="button" data-add="${p.id}">Add to bag</button>
@@ -220,15 +227,46 @@ async function initPDP(cat) {
     openLightbox(gallery[current].src, gallery[current].alt));
 
   /* Swatches — hex label plus a visible ordinal, so colour is never alone */
-  root.querySelectorAll(".sw").forEach((s) =>
-    s.addEventListener("click", () => {
+  /* Selecting a finish updates price, stock, SKU and the main photograph.
+
+     The gallery is matched on image URL, not on images[].variant_id: on 709761
+     those ids point at a variant set that no longer exists (2306331 claims
+     variant 1399688, while the live variants are 1399696-1700), so trusting
+     them would silently show the wrong photograph. Noted in DECISIONS.md for
+     cleanup on the Selldone side. */
+  const galIndexFor = (v) => {
+    if (!v?.image) return -1;
+    const want = img(v.image);
+    return gallery.findIndex((g) => g.src === want);
+  };
+  const showGallery = (i) => {
+    if (i < 0 || i >= gallery.length) return;
+    const main = root.querySelector("#galmain img");
+    if (main) { main.src = gallery[i].src; main.alt = gallery[i].alt; }
+    root.querySelectorAll(".thumb").forEach((t) =>
+      t.classList.toggle("is-on", Number(t.dataset.i) === i));
+  };
+
+  root.querySelectorAll(".sw").forEach((sw) =>
+    sw.addEventListener("click", () => {
       root.querySelectorAll(".sw").forEach((x) => { x.classList.remove("is-on"); x.setAttribute("aria-checked", "false"); });
-      s.classList.add("is-on"); s.setAttribute("aria-checked", "true");
-      const i = Number(s.dataset.i);
+      sw.classList.add("is-on"); sw.setAttribute("aria-checked", "true");
+      const i = Number(sw.dataset.i);
+      const v = variants[i];
       const hexEl = root.querySelector("[data-sw-hex]");
       const posEl = root.querySelector("[data-sw-pos]");
-      if (hexEl) hexEl.textContent = s.dataset.hex;
-      if (posEl) posEl.textContent = `Finish ${i + 1} of ${finishes.length}`;
+      const skuEl = root.querySelector("[data-sw-sku]");
+      const priceEl = root.querySelector("[data-price]");
+      const stockEl = root.querySelector("[data-stock]");
+      if (hexEl) hexEl.textContent = v.color;
+      if (posEl) posEl.textContent = `Finish ${i + 1} of ${variants.length}`;
+      if (skuEl) { skuEl.textContent = v.sku || ""; skuEl.hidden = !v.sku; }
+      if (priceEl) priceEl.innerHTML = `${money(priceOf(v))}${p.was ? `<s>${money(p.was)}</s>` : ""}`;
+      if (stockEl) {
+        const q = stockOf(v);
+        stockEl.innerHTML = `<i class="dot"></i> ${q > 0 ? `${q} in stock &middot; ships within 3 working days` : "Currently unavailable"}`;
+      }
+      showGallery(galIndexFor(v));
     }));
 
   initAcc(root);

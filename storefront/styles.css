@@ -1230,3 +1230,38 @@ html.js-reveal .reveal.is-in{opacity:1;transform:none;}
      room more than a fourth nav item does. */
   .nav a:last-child{display:none;}
 }
+
+/* "from" on a card whose variants carry different prices. Two references range
+   $16,400 above their base, and a flat figure there is a price the customer
+   will not be charged. */
+.price__from{
+  font-family:var(--body);font-size:10px;letter-spacing:.14em;text-transform:uppercase;
+  color:var(--mist-text);margin-right:4px;
+}
+
+/* --- Image swatches ---------------------------------------------------------
+   15.2% of the catalogue carries a variant image, but those ten references are
+   the ones customers land on from the hero — so a photograph is used wherever
+   one exists and a colour circle carries the rest. A brown strap and a steel
+   bracelet are different objects, not different colours, and a dot cannot say
+   that; where the shop has not supplied a photograph the dot is still the
+   honest fallback.
+
+   The accessible label stays the hex. Selldone generates colour names at render
+   time rather than storing them, so a name here would be invented. The visible
+   "Finish 2 of 5" ordinal is what keeps colour from being the only indicator. */
+.sw--img{
+  width:52px;height:52px;border-radius:var(--radius);overflow:visible;
+  background:var(--dial-pure);border:1px solid var(--rule);position:relative;padding:0;
+}
+.sw--img img{width:100%;height:100%;object-fit:contain;border-radius:var(--radius);}
+.sw--img.is-on{border-color:var(--blued);box-shadow:0 0 0 2px var(--blued);}
+/* the colour still shows, as a corner dot, so the finish is readable at a glance */
+.sw__dot{
+  position:absolute;right:-3px;bottom:-3px;width:14px;height:14px;border-radius:50%;
+  border:2px solid var(--dial-pure);
+}
+.swsku{
+  font-family:var(--data);font-size:11px;letter-spacing:.06em;color:var(--mist-text);
+  margin-left:10px;
+}

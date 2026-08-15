@@ -806,6 +806,36 @@ push. Disconnecting it is a dashboard action.
 
 ---
 
+### After the freeze — noted, not committed
+
+The brief froze feature work after the callout and the credit bar. These are the
+things I would still change, recorded rather than shipped.
+
+**The hero hotspot card shows a flat price where the shop card shows "from".**
+Open the marker on the man's watch and it reads `$42,500`; the same reference on
+the shop grid now reads `from $42,500`, because its five finishes run to $58,900.
+The hero figure is not *wrong* — it is the real price of the default finish, and
+the product page opens on that same finish — but the two surfaces describe the
+same reference differently. One line in `home.js` would align them. Left alone
+because it is feature work and the freeze had landed.
+
+**`docs/screenshots/` is now a second, older set.** The pack lives in
+`docs/pack/`; the five images in `docs/screenshots/` predate the credit bar and
+are still referenced by README. Either regenerate them or point README at the
+pack. Not touched under the freeze.
+
+**A note on how nearly the pack shipped a lie.** Screenshot 08 is supposed to
+show faceting working. The first capture asserted only that the card count
+*dropped* after applying a price band — and it did, 11 to 3. But the band
+excluded every Haute Horlogerie reference, so what the screenshot actually
+showed was the **empty state**, whose "closest matches" suggestions are also
+`.pcard`. The assertion passed on the fallback. It now requires a real subset:
+fewer than before, more than none, and no empty-state heading. Caught by looking
+at the picture, which is the whole reason the brief says screenshots decide
+visual questions.
+
+---
+
 ### The sign-in callout, the credit bar, and one audit that was lying
 
 **The callout is not on checkout.** The brief said to give sign-in the same

@@ -95,7 +95,7 @@ depicts.
 | `05-salon.png` | That a shop can carry brand narrative in the same surface as its catalogue without a separate CMS. |
 | `06-reviews.png` | Honest handling of absent data: six clearly-labelled sample reviews, because the shop has no real ratings. Remove the label and it becomes a false claim. |
 | `07-shop-listing.png` | 66 live products, 24 per page with Load more, each card priced from live data. |
-| `08-shop-filtered.png` | Faceting across a live catalogue — one collection plus a price range — resolved client-side with no extra API calls. |
+| `08-shop-filtered.png` | Faceting across a live catalogue — Haute Horlogerie plus a price band, 11 references down to 5 — resolved client-side with no extra API calls. |
 | `09-product.png` | A reference with five real variants: gallery, finish swatches, live stock and SKU. |
 | `10-product-variant.png` | A different finish selected — price, stock, SKU and photograph all change together. This is the fix for a bug that showed $42,500 on a reference that runs to $58,900. |
 | `11-blog.png` | The shop's four real articles with their real categories and real dates. |

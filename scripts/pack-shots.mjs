@@ -63,8 +63,13 @@ async function page({ width = 1440, height = 900, signedIn = false, bag = false 
   const ctx = await browser.newContext({ viewport: { width, height }, reducedMotion: "reduce" });
   if (signedIn) {
     await ctx.addInitScript((t) => localStorage.setItem("pajulina_storefront_oauth_tokens_v1", t), TOKEN);
-    await ctx.route(/selldone\.com\/.*(user|profile|me)/i, (r) =>
-      r.fulfill({ status: 200, contentType: "application/json", body: JSON.stringify(PROFILE) }),
+    /* Must NOT swallow the avatar image: it lives under the same
+       /users/{id}/profile/ prefix, and fulfilling it with JSON renders a broken
+       image in the panel. Only the profile JSON is stubbed; the avatar is
+       fetched for real. */
+    await ctx.route(
+      (u) => /selldone\.com\/.*(user|profile|me)/i.test(u.href) && !/avatar/i.test(u.href),
+      (r) => r.fulfill({ status: 200, contentType: "application/json", body: JSON.stringify(PROFILE) }),
     );
   }
   if (bag) await ctx.addInitScript((v) => localStorage.setItem("watchino_bag_v1", v), BAG);
@@ -83,22 +88,34 @@ console.log(`Capturing from ${BASE}\n`);
 {
   const { ctx, p } = await page();
   await go(p, "/", "#catgrid .cat");
-  await shoot(p, "01-homepage-full.png", { fullPage: true });
   await shoot(p, "02-hero.png");
   await shoot(p, "20-selldone-bar.png", { clip: { x: 0, y: 0, width: 1440, height: 260 } });
 
-  // One hotspot card open. Clicked, not simulated — a coordinate assertion
-  // cannot tell you the card actually rendered over the photograph.
-  const spot = await p.$(".hspot");
-  if (spot) {
+  /* The hotspot shot comes BEFORE the full-page one. A fullPage capture
+     temporarily resizes the viewport, and the markers are positioned by
+     projecting image space into box space in JS — after that resize they are
+     stale until another resize event fires, and the click times out on an
+     element that reports visible but sits nowhere useful.
+
+     Clicked, not simulated: a coordinate assertion cannot tell you the card
+     actually rendered over the photograph. */
+  const spot = p.locator(".hspot").first();
+  if (await spot.count()) {
+    await spot.waitFor({ state: "visible", timeout: 20000 });
     await spot.click();
-    await p.waitForTimeout(700);
+    await p.waitForTimeout(900);
+    const open = await p.locator(".hcard").first().isVisible().catch(() => false);
+    if (!open) console.log("  !! hotspot card did not open — 03 shows a closed marker");
     await shoot(p, "03-hero-hotspot-open.png");
     await p.keyboard.press("Escape");
-    await p.waitForTimeout(400);
+    await p.waitForTimeout(500);
   } else {
     console.log("  !! no .hspot found — 03 not captured");
   }
+
+  await p.evaluate(() => scrollTo(0, 0));
+  await p.waitForTimeout(400);
+  await shoot(p, "01-homepage-full.png", { fullPage: true });
 
   for (const [name, sel] of [
     ["04-collections-grid.png", "#catgrid"],
@@ -126,15 +143,21 @@ console.log(`Capturing from ${BASE}\n`);
   await go(p, "/shop.html?cat=haute-horlogerie", "#pgrid .pcard");
   const beforeN = await p.locator("#pgrid .pcard").count();
   await p.$eval("#phi", (el) => {
-    el.value = "72";
+    el.value = "94";
     el.dispatchEvent(new Event("input", { bubbles: true }));
     el.dispatchEvent(new Event("change", { bubbles: true }));
   });
   await p.waitForTimeout(900);
   const afterN = await p.locator("#pgrid .pcard").count();
   const band = await p.textContent("#pout");
+  /* "Fewer cards" is NOT enough: the no-results state renders closest-match
+     suggestions that are also .pcard, so a band excluding everything counts as
+     3 and looks like a successful filter. It has to be a real subset — fewer
+     than before, more than none, and no empty-state heading. */
+  const empty = await p.locator("text=Nothing in this range").count();
   console.log(`     haute-horlogerie ${beforeN} -> ${afterN} with band ${String(band).trim()}`);
-  if (afterN >= beforeN) console.log("  !! price band changed nothing — 08 would prove nothing");
+  if (empty) console.log("  !! no results — 08 shows the empty state, not faceting");
+  else if (afterN >= beforeN || afterN === 0) console.log("  !! band is not a real subset — 08 would prove nothing");
   await shoot(p, "08-shop-filtered.png");
   await ctx.close();
 }
@@ -163,9 +186,10 @@ console.log(`Capturing from ${BASE}\n`);
   const { ctx, p } = await page({ bag: true });
   await go(p, "/blog", ".post");
   await shoot(p, "11-blog.png");
-  // Posts link to /article?slug=… (no .html — linking article.html would cost
-  // a redirect on every click), so match on the real prefix.
-  const href = await p.getAttribute(".post a[href^='article']", "href");
+  // .post IS the anchor, not a card containing one, and it links to
+  // /article?slug=… — no .html, because linking article.html would cost a
+  // redirect on every click.
+  const href = await p.getAttribute("a.post", "href");
   await go(p, "/" + String(href).replace(/^\//, ""), "[data-article-body] p");
   await shoot(p, "12-article.png");
   await go(p, "/checkout.html", "#sumrows .sum__row");

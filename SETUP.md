@@ -113,7 +113,34 @@ If a redirect URI is missing you get `invalid_client`, and the message does not
 tell you which URI it objected to. See [troubleshooting](#troubleshooting) —
 there is a second, more misleading cause.
 
-## 5. Cloudflare Workers Builds
+## 5. Set the shop email address
+
+Do this in the same sitting as the OAuth client. The two together are what make
+customer sign-in work; the OAuth client alone is not enough.
+
+**Store dashboard → Settings → Email.**
+
+The two states, plainly:
+
+| Shop email | What a customer gets when they tap *Sign in* |
+|---|---|
+| **Not set** | Redirected to Selldone and asked to create an account **on Selldone**. They end up with a Selldone account, not a session on your shop. Nothing in the storefront can override this. |
+| **Set** | Signed in to your shop directly, with their email address. They return to the page they left. |
+
+It is a **shop-level** setting. A visitor cannot change it, and neither can the
+storefront — so there is no code fix, only the dashboard.
+
+Because this is invisible until a customer hits it, this storefront ships an
+amber callout under the *Sign in* button naming the setting. It renders only
+when signed out. **Once your shop is configured, delete it** — it is guidance
+for someone evaluating Selldone, not shop copy. One constant, `SIGNIN_NOTE` in
+`storefront/app.js`, plus `.setupnote` in `storefront/styles.css`.
+
+> On the Watchino demo shop the contact email is set to `info@watchino.com`
+> while `mail_service` is `null`. The callout is left in place deliberately:
+> the repo is a reference for people setting up their own shop.
+
+## 6. Cloudflare Workers Builds
 
 Deployment is git-driven: push to `main` and Cloudflare builds and publishes.
 
@@ -155,14 +182,14 @@ html_handling = "auto-trailing-slash"
 `/shop.html` answers **307** to `/shop`. Link extensionless to avoid a redirect
 on every click.
 
-## 6. Custom domain
+## 7. Custom domain
 
 Add the domain to the Worker (**Settings → Domains & Routes**), then — and this
 is the step people forget — **add `https://<that-domain>/callback/` to the OAuth
 client's redirect URIs**. Sign-in works on the old domain and fails on the new
 one otherwise, which looks like a broken deploy rather than a missing URI.
 
-## 7. Run the verification suite
+## 8. Run the verification suite
 
 Start the dev server, then run the checks:
 
@@ -188,7 +215,7 @@ node scripts/pagecheck.mjs https://your-shop.example.com
 **Run them against production after deploying, not only locally.** That
 distinction has caught real bugs here twice.
 
-## 8. Catalogue expectations
+## 9. Catalogue expectations
 
 The storefront reads everything live. For it to work:
 

@@ -187,6 +187,32 @@ tab stop" and was wrong.
 
 ---
 
+## The sign-in callout, and why it is amber
+
+Direct customer sign-in only works once the shop owner has set an email address
+under **Store dashboard → Settings → Email**. Without it the customer is sent to
+Selldone to register there instead of signing in to the shop. It is shop-level,
+so no storefront code can work around it.
+
+Because nobody cloning this repo would guess that, the account panel carries an
+amber callout under the *Sign in* button naming the setting. Three rules govern
+it:
+
+- **It is amber**, the same `#E0A800` on `#FFF8E1` as the demo-content banner on
+  the policy pages. One amber across the site means one category of message:
+  *this is scaffolding, not the shop speaking.* It is deliberately unlike the
+  rest of the palette, which is graphite, dial white and blued steel.
+- **It renders only when signed out.** Setup instructions inside an account
+  someone already has are clutter. `SIGNIN_NOTE` appears in the two signed-out
+  branches of `renderAccount()` and nowhere else.
+- **A real shop deletes it.** This is guidance for someone evaluating Selldone,
+  not shop copy. One constant in `storefront/app.js` and one `.setupnote` block
+  in `styles.css` — removing both leaves no trace.
+
+Checkout does not carry it: checkout on this storefront is guest-only, with an
+email field and no sign-in offer, so there is nothing for the callout to attach
+to. If a sign-in affordance is ever added there, it gets the same treatment.
+
 ## Content rules
 
 **Never invent data.** No fabricated reviews, calibers, colour names, contact

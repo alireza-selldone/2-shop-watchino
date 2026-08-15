@@ -37,6 +37,12 @@ contact details or API paths. Where real data does not exist, render an honest
 empty state. Sample content is permitted **only when visibly labelled as
 sample** — remove the label and it becomes a false claim.
 
+**Customer sign-in needs a shop email address.** Set it under Store dashboard →
+Settings → Email before expecting direct sign-in to work; without it customers
+are redirected to Selldone to register there instead. It is a shop-level setting
+no storefront code can override, so configure it when setting up a new shop, and
+delete the amber `SIGNIN_NOTE` callout from `storefront/app.js` once it is done.
+
 **Endpoints come from the registry.** Use the Selldone MCP endpoint search and
 describe tools. Do not guess a REST path. Three verified traps: the blog detail
 route takes the article's `parent_id` and not its id; `?extra=true` on the blog

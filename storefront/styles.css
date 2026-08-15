@@ -1265,3 +1265,40 @@ html.js-reveal .reveal.is-in{opacity:1;transform:none;}
   font-family:var(--data);font-size:11px;letter-spacing:.06em;color:var(--mist-text);
   margin-left:10px;
 }
+
+/* Sign-in setup guidance. Amber, matching the demo-content banner on the policy
+   pages exactly (#E0A800 on #FFF8E1) rather than the mockup's slightly different
+   tint — one amber across the site reads as one category of message. Full
+   border with a heavier left edge, so it is unmistakably not shop chrome. */
+.setupnote{
+  margin-top:26px;background:#FFF8E1;border:1px solid #E0A800;
+  border-left:3px solid #E0A800;border-radius:var(--radius);padding:16px 18px;
+}
+.setupnote__k{
+  display:block;margin-bottom:8px;font-size:10px;font-weight:700;
+  letter-spacing:.18em;text-transform:uppercase;color:#6E4E00;
+}
+.setupnote p{margin:0;font-size:13.5px;line-height:1.6;color:#4A3600;}
+.setupnote p + p{margin-top:10px;font-weight:500;color:#3D2C00;}
+.setupnote b{font-weight:600;color:#3D2C00;}
+
+/* "Made with Selldone" — platform credit, not shop chrome. Light on purpose:
+   the announcement bar below it is dark, and two dark bars stacked read as one
+   heavy block. Deliberately outside the sticky header so it scrolls away and
+   the stuck-header height (which .filters and .pinfo offset from) is unchanged. */
+.sdbar{
+  background:var(--dial-pure);border-bottom:1px solid var(--rule);
+}
+.sdbar__in{
+  margin:0 auto;max-width:var(--maxw);padding:9px var(--pad);
+  font-size:11.5px;letter-spacing:.06em;color:var(--slate);line-height:1.35;
+}
+.sdbar__hx{color:#B3454F;}
+.sdbar a{
+  color:var(--graphite);text-decoration:underline;text-underline-offset:2px;
+  /* Padding out to the bar's full height, pulled back with negative margin so
+     the tap target grows without the bar growing. 40px is the cap, so this
+     cannot reach the site's usual 44 — see the .sdbar note in _audit.js. */
+  display:inline-block;padding:11px 12px;margin:-11px -12px;
+}
+.sdbar a:hover{color:var(--blued);}

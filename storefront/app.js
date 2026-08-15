@@ -357,6 +357,23 @@ function initSearch() {
    and the detail goes to the console — a stale-cache invalid_client once
    reached the panel as a JSON dump, which told the visitor nothing and hid the
    one line that would have identified it immediately. */
+/* Guidance for someone evaluating Selldone, not shop copy. Direct customer
+   sign-in only works once the shop owner has set a shop email address; without
+   it the visitor is sent to Selldone to register there instead. Nobody cloning
+   this repo would guess that, so the storefront says it out loud.
+
+   Amber on purpose — the same amber as the demo-content banner, so it reads as
+   "this is scaffolding" rather than as part of the shop's own palette. Rendered
+   only when signed out: setup instructions inside an account someone already
+   has are clutter. A real shop deletes this once the setting is in place. */
+const SIGNIN_NOTE = `<div class="setupnote">
+  <span class="setupnote__k">Building your own shop?</span>
+  <p>Direct sign-in only works once the shop owner has set an email address under
+     <b>Store dashboard → Settings → Email</b>. Until then, customers are sent to
+     Selldone to create an account there instead of signing in to the shop itself.</p>
+  <p>It is a shop-level setting, so a visitor cannot change it.</p>
+</div>`;
+
 async function renderAccount() {
   const body = document.querySelector("[data-account-body]");
   if (!body) return;
@@ -370,6 +387,7 @@ async function renderAccount() {
     body.innerHTML = `<div class="acct">
       <p class="lede" style="margin-bottom:20px">We could not check whether you are signed in. Try again in a moment.</p>
       <button class="btn btn--full" type="button" data-signin>Sign in</button>
+      ${SIGNIN_NOTE}
     </div>`;
     wire(body);
     return;
@@ -381,6 +399,7 @@ async function renderAccount() {
       <p class="cap" style="margin-bottom:24px">Use your email address. This is a demonstration storefront — no order is ever placed.</p>
       <button class="btn btn--full" type="button" data-signin>Sign in</button>
       <p class="cap center" style="margin-top:14px">New here? <button class="linkish" type="button" data-signin>Create account</button></p>
+      ${SIGNIN_NOTE}
     </div>`;
     wire(body);
     return;

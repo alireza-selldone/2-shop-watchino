@@ -5,7 +5,9 @@ shop. Each item is stated as found, with the evidence that established it.
 Nothing here is a complaint and nothing here is speculative — where a cause is
 unknown, it says so.
 
-Ordered roughly by how much time each one cost.
+Ordered roughly by how much time each one cost, except item 2, which is
+placed second because it is the one most likely to affect anyone else building
+a storefront template on Selldone.
 
 ---
 
@@ -29,7 +31,55 @@ truthfully rather than hiding a date it cannot control.
 
 ---
 
-## 2. Variants carry a colour hex but no colour name
+## 2. Categories have no portable identifier across shops
+
+**Ours or Selldone's?** The hardcoded map below is **this template's fault, not
+the platform's** — it is listed here because the reason it had to exist is a
+platform observation, and because it is the single biggest obstacle to reusing
+this storefront on another shop.
+
+**What happens.** A category on `products/all` carries exactly these fields:
+
+```
+id  title  icon  parent_id  public_attributes
+```
+
+Verified against shop 8460 on 15 August 2026. There is **no slug and no handle**
+— nothing stable that means "the men's classic collection" independent of which
+shop it lives on. Products carry `category_id`, a shop-scoped integer.
+
+**What it forced.** With no portable identifier, this storefront hardcodes
+Watchino's own category ids to route products into collections:
+
+```js
+const CAT_SLUG = { 37955: "mens-classic", 37956: "womens-collection",
+                   37957: "heritage-leather", 107902: "sport-chronograph",
+                   37959: "diamond-gold", 37958: "haute-horlogerie" };
+const slug = CAT_SLUG[p.category_id] || "";
+```
+
+**The consequence, and why it is worth the Selldone team's attention.** Point
+this repo at a *different* shop — the correct thing to do — and every product
+resolves to `""`, no collection has any members, and the six-tile collections
+grid renders **empty**. Nothing errors. The page reads as a broken build rather
+than as a shop that has not been configured.
+
+The incentive is inverted: the template looks healthiest when it is still
+serving the original shop's catalogue, and looks broken the moment someone does
+the right thing. Any storefront template built on Selldone will hit this the
+same way.
+
+**Mitigating detail.** Category `title` and `icon` do arrive live, so a setup
+script can discover the shop's real categories at install time. That is the fix
+on our side, and it is planned. A stable per-category slug on the platform side
+would remove the need for it.
+
+**What would fix it.** An optional shop-authored slug on the category, returned
+by the catalogue routes — the same role `@handle` already plays for shops.
+
+---
+
+## 3. Variants carry a colour hex but no colour name
 
 **What happens.** A variant row has `color: "#B76E79"`. There is no `name`,
 `title` or `label` field on it, nor on the `variants` summary array, nor
@@ -50,7 +100,7 @@ shop owner.
 
 ---
 
-## 3. `variant_id` on gallery images can go stale against the live variant set
+## 4. `variant_id` on gallery images can go stale against the live variant set
 
 **What happens.** `images[]` carries a `variant_id` intended to link a photograph
 to a variant. On product 709761 those ids point at a variant set that no longer
@@ -74,7 +124,7 @@ deleted.
 
 ---
 
-## 4. `?extra=true` on the blog list returns categories but an empty articles array
+## 5. `?extra=true` on the blog list returns categories but an empty articles array
 
 **What happens.** The parameter is documented as returning extra data. It does
 return the category list — and an `articles` array with zero entries, where the
@@ -85,7 +135,7 @@ loses the articles and has to make two calls anyway.
 
 ---
 
-## 5. The single-article endpoint takes `parent_id`, not the article id
+## 6. The single-article endpoint takes `parent_id`, not the article id
 
 **What happens.** The blog detail route's `{blog_id}` segment is the article's
 `parent_id`. Passing the article's own id returns "Blog not found".
@@ -99,7 +149,7 @@ what Watchino does, at the cost of an N+1 when detail fields are needed.
 
 ---
 
-## 6. Customer sign-in silently redirects to Selldone until a shop email is set
+## 7. Customer sign-in silently redirects to Selldone until a shop email is set
 
 **What happens.** Direct customer sign-in requires the shop owner to have set an
 email address under **Store dashboard → Settings → Email**. Until then, a
@@ -126,7 +176,7 @@ configured, or return a distinguishable error the storefront can render.
 
 ---
 
-## 7. The shop's own article content did not match its products
+## 8. The shop's own article content did not match its products
 
 **What happens.** The four articles seeded on the shop were about unrelated
 subjects — they did not reference the catalogue they sat beside.
@@ -138,7 +188,7 @@ mismatch. Watchino shows the shop's real posts as they are.
 
 ---
 
-## 8. Two spellings of the same maker exist in product data
+## 9. Two spellings of the same maker exist in product data
 
 **What happens.** `Bonin` and `Bonin & Co.` both appear as maker strings across
 the catalogue, and the shop's own filter config lists only `Bonin & Co.` and
@@ -152,7 +202,7 @@ merging would be the storefront inventing an equivalence the data does not state
 
 ---
 
-## 9. `products/list` rejects `limit` above its cap without saying so
+## 10. `products/list` rejects `limit` above its cap without saying so
 
 **What happens.** Requesting `limit=300` returns 404, not a 422 or a clamped
 page. The response does not name the parameter or the cap.
@@ -162,7 +212,7 @@ about twenty minutes.
 
 ---
 
-## 10. XAPI throttling is silent at the storefront
+## 11. XAPI throttling is silent at the storefront
 
 **What happens.** Under sustained automated load (a verification matrix hitting
 88 page loads, each making two XAPI calls), catalogue requests begin failing.
@@ -178,7 +228,7 @@ the shop returned that minute.
 
 ---
 
-## 11. The shop-level variant asset library is empty and unused
+## 12. The shop-level variant asset library is empty and unused
 
 **What happens.** `product_variant_asset_list` returns zero assets for shop 8460,
 while 37 products carry variants and 10 carry per-variant images. The asset

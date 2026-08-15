@@ -52,6 +52,88 @@ push. Disconnecting it is a dashboard action.
 
 ---
 
+## Handover config — agreed, scoped, not built
+
+Deferred to its own piece of work after the pack. **No code was written for
+this.** Recorded here so phase 1 starts from the right place.
+
+**The problem.** An untouched clone of this repo serves shop 8460's catalogue on
+someone else's domain. The shop id and handle are meta tags, and
+`watchino-data.js` falls back to `handle: "Watchino", id: 8460` when they are
+absent — so there is no configuration that produces "no shop". Deleting the
+meta tags does not fail; it quietly serves Watchino.
+
+Sign-in is the exception: the OAuth client id is Watchino's and its redirect
+URIs point at `watchino.selldone.shop`, so a clone gets `invalid_client`. That
+one fails loudly. The catalogue is the silent one.
+
+**Agreed shape:** `shop.config.json` at the repo root, an `npm run setup` that
+writes its values into the meta tags, the copy and store-pages, and a visible
+warning when the config is still the template's. Documented as step one of
+SETUP.md. Three phases:
+
+1. Config file, warning banner, metas, footer copy, `wrangler.toml`, and lifting
+   the `TOKENS` block out of `build-pages.mjs`. Half a day. Kills the silent
+   wrong-catalogue problem on its own.
+2. XAPI discovery for categories and hero products — see below, this is the one
+   that matters.
+3. Hero behaviour for a shop without its own photograph.
+
+### The warning fires on "template id OR no id", not on 8460
+
+Checking for `8460` specifically would miss the more dangerous case. Because of
+the `|| 8460` fallback, an **empty** config serves Watchino just as surely as a
+config that still names it — and an operator who deleted the meta tags believes
+they have unset it. The condition is "the config still holds the template's shop
+id, or holds no shop id at all". Silent wrong data is worse than a broken build.
+
+### CAT_SLUG is why phase 2 is not optional
+
+The finding that matters most, and it was missed on both sides until the
+handover audit.
+
+`watchino-data.js` maps Watchino's own numeric category ids to slugs:
+
+```js
+const CAT_SLUG = { 37955: "mens-classic", 37956: "womens-collection",
+                   37957: "heritage-leather", 107902: "sport-chronograph",
+                   37959: "diamond-gold", 37958: "haute-horlogerie" };
+const slug = CAT_SLUG[p.category_id] || "";
+```
+
+On any other shop every product resolves to `""`. `CAT_ORDER` then builds the
+six hardcoded collections and `.filter((c) => c.count > 0)` drops all six,
+because none has a product. **The collections grid renders empty** — not six
+wrong tiles, no tiles at all.
+
+So doing the *right* thing — pointing the clone at your own shop — produces
+something that reads as a broken build rather than as a misconfiguration. That
+inverts the incentive: the clone looks healthiest when it is serving someone
+else's catalogue.
+
+This is why the discovery script is not a nice-to-have. It is the thing that
+makes the template usable at all, and phase 2 should be scoped as such.
+
+One piece of good news for that work: the shop's real category **titles and
+icons already arrive live** on `products/all` as `p.category.title` and
+`p.category.icon`. Only four things are hardcoded — the id→slug map, the display
+order, the six blurbs, and the six hero product ids. Discovery has less to
+invent than it looks.
+
+### Phase 3: no hero photograph means no hotspots
+
+Decided, not built. A shop without its own lifestyle photograph gets the
+**plain product-plate hero** used before the lifestyle image, with hotspots
+switched off — not the Watchino photograph, and not a missing image with markers
+floating over nothing.
+
+`HERO_HOTSPOTS` are percentages measured against one photograph of two specific
+watches (`709761` at 53.9%/70.6%, `709762` at 77.4%/63.5%). They cannot be
+derived, only measured by eye against a new photograph. The config records which
+mode a shop is in; it cannot compute the coordinates.
+
+---
+
 ## After the freeze — noted, not committed
 
 The brief froze feature work after the callout and the credit bar. These are the

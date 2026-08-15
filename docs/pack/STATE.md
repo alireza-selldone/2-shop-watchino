@@ -34,17 +34,26 @@ the Swiss-systematic `#D8341C` one and not the dark one. README claimed they wer
 "kept for reference"; that claim has been corrected. They are described from the
 record and nothing was faked to fill the gap.
 
-**4. The shop's data has two spellings of one maker.** `Bonin` (6 products) and
+**4. This repo cannot yet be pointed at another shop.** An untouched clone
+serves *this* shop's catalogue on someone else's domain — the shop id and handle
+are meta tags, and `watchino-data.js` falls back to `Watchino` / `8460` when they
+are absent, so deleting them does not unset anything. Worse, pointing a clone at
+its own shop renders an **empty** collections grid, because `CAT_SLUG` maps this
+shop's numeric category ids and categories carry no portable identifier. See
+GAPS.md item 2 for the evidence and DECISIONS.md for the agreed three-phase fix.
+Scoped and deferred; no code written.
+
+**5. The shop's data has two spellings of one maker.** `Bonin` (6 products) and
 `Bonin & Co.` (1 product) are the same maker. Not changed — Selldone writes are
 additive only on this project. The storefront reports six maker strings rather
 than silently merging them.
 
-**5. The duplicate Cloudflare account's build fails on every push.**
+**6. The duplicate Cloudflare account's build fails on every push.**
 `2-shop-watchino` on account `9fcd11cc…` fails while `watchino` succeeds.
 Production is unaffected and serves the current build, but the repo's checks show
 red. Disconnecting it is a dashboard action.
 
-**6. Stale `variant_id`s on product 709761.** `images[].variant_id` points at
+**7. Stale `variant_id`s on product 709761.** `images[].variant_id` points at
 variants `1399688–91`; the live variants are `1399696–1700`. The storefront
 matches on image URL instead, so it renders correctly, but the underlying links
 are still wrong on the Selldone side.
@@ -59,7 +68,7 @@ Nothing else is known-broken.
 |---|---|
 | **Products** | **66** |
 | **Categories** | **6** |
-| **Maker strings** | **6** (five real makers — see item 4) |
+| **Maker strings** | **6** (five real makers — see item 5) |
 | **Price range** | **$1,888.90 – $153,888.90** |
 | Products carrying variants | 37 of 66 |
 | Total variant rows | 136 |

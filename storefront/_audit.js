@@ -81,6 +81,11 @@ export function audit() {
       if (lr.height >= 44 && lr.width >= 44) return false;
     }
     const r = el.getBoundingClientRect();
+    /* The platform-credit bar is capped under 40px by design, so a link inside
+       it can never reach 44. It is held to the WCAG 2.5.8 AA minimum (24x24)
+       instead of the site's own 44 rule — a lower floor, not no floor, so this
+       still fails if the link shrinks to its natural 51x12. */
+    if (el.closest('.sdbar')) return r.height < 24 || r.width < 24;
     return r.height < 44 || r.width < 44;
   }).map((el) => {
     const r = el.getBoundingClientRect();
@@ -111,10 +116,16 @@ export function audit() {
   if (shadowed.length) add('box-shadow-on-card', [...new Set(shadowed)]);
 
   /* 6. fonts */
+  /* document.fonts.check() returns true when NOTHING matches the family —
+     "usable via fallback" counts as a pass — so it stays green if the
+     stylesheet itself 404s and every heading silently renders in Times.
+     Require a registered face that actually reached "loaded". */
+  const loaded = (family) =>
+    [...document.fonts].some((f) => f.family === family && f.status === 'loaded');
   const fonts = {
-    bodoni: document.fonts.check('400 16px "Bodoni Moda"'),
-    archivo: document.fonts.check('400 16px "Archivo"'),
-    azeret: document.fonts.check('400 16px "Azeret Mono"'),
+    bodoni: loaded('Bodoni Moda'),
+    archivo: loaded('Archivo'),
+    azeret: loaded('Azeret Mono'),
   };
   Object.entries(fonts).forEach(([k, v]) => { if (!v) add('font-not-loaded', k); });
 

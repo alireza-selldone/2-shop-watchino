@@ -39,11 +39,23 @@ async function cacheThirdParty(ctx){
   await ctx.route(/fonts\.(googleapis|gstatic)\.com|xapi\.selldone\.com/,async(route)=>{
     const url=route.request().url();
     if(!fontCache.has(url)){
-      const res=await route.fetch();
-      const headers={...res.headers()};
-      // body() is already decoded; leaving these would describe it wrongly.
-      delete headers["content-encoding"]; delete headers["content-length"];
-      fontCache.set(url,{status:res.status(),headers,body:await res.body()});
+      // Cache successes only. Memoising a failure replays one unlucky fetch
+      // into all 110 states: a single throttled font 404 failed the whole
+      // matrix while the site was healthy, and the font it blamed changed
+      // run to run because a different request lost the race each time.
+      // A miss here costs one refetch; a poisoned entry costs the run.
+      let entry=null;
+      try{
+        const res=await route.fetch();
+        if(res.status()<400){
+          const headers={...res.headers()};
+          // body() is already decoded; leaving these would describe it wrongly.
+          delete headers["content-encoding"]; delete headers["content-length"];
+          entry={status:res.status(),headers,body:await res.body()};
+        }
+      }catch{/* transient: fall through to a live request */}
+      if(!entry){ await route.fallback(); return; }
+      fontCache.set(url,entry);
     }
     await route.fulfill(fontCache.get(url));
   });
@@ -67,6 +79,11 @@ for(const w of WIDTHS){
       for(let y=0;y<document.documentElement.scrollHeight;y+=s){scrollTo(0,y);await new Promise(r=>setTimeout(r,110));}
       scrollTo(0,0);await new Promise(r=>setTimeout(r,300));});
     await p.waitForTimeout(300);
+    // The font check reads FontFace.status, so it has to run after loading
+    // settles or it measures the race instead of the page. Bounded: a genuinely
+    // missing font must still fail the check rather than hang the matrix.
+    await p.evaluate(()=>Promise.race([document.fonts.ready,
+      new Promise(r=>setTimeout(r,5000))])).catch(()=>{});
     const r=await p.evaluate((src)=>{ eval(src); return audit(); }, AUDIT_SRC);
     if(errs.length) r.failures.push({check:"console-or-request-error",detail:errs.slice(0,3)});
     r.pass=r.failures.length===0;

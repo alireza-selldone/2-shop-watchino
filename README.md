@@ -13,6 +13,26 @@ Static, framework-free, deployed on Cloudflare Workers.
 
 ---
 
+## Before you deploy your own: customer sign-in needs a shop email
+
+Direct customer sign-in only works once the shop owner has set an email address
+under **Store dashboard → Settings → Email**. Until that is set, a customer who
+taps *Sign in* is sent to Selldone to create an account **there** instead of
+signing in to the shop itself. It is a shop-level setting, so a visitor cannot
+change it and no amount of storefront code works around it.
+
+This is the single most common surprise when cloning this repo, which is why the
+storefront says so in the account panel rather than leaving you to discover it.
+That amber callout is scaffolding for people evaluating the platform — **delete
+it once your shop is configured.** It lives in one place, `SIGNIN_NOTE` in
+[`storefront/app.js`](storefront/app.js).
+
+On this demo shop the contact email *is* set (`info@watchino.com`) but no mail
+service is configured, so the callout stays visible. See
+[`SETUP.md`](SETUP.md) step 4 for both states.
+
+---
+
 ## Design direction — "Blued Steel"
 
 The visual language comes from horological instrumentation rather than from a generic luxury template. The accent is `#2F4E8F` — the colour steel turns at 290°C when a watchmaker blues a set of hands.
@@ -72,7 +92,10 @@ The visual language comes from horological instrumentation rather than from a ge
 
 ## Two other directions were built
 
-Both are complete four-page prototypes, kept for reference. Neither is deployed.
+Both were complete four-page prototypes. **Neither survives in this repo** —
+`design-reference/` holds an earlier snapshot of the shipped Blued Steel
+direction, not these. They are described here from the record; there are no
+screenshots and no runnable copy. Treat the table below as history.
 
 | | |
 |---|---|

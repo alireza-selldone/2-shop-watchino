@@ -92,15 +92,18 @@ The visual language comes from horological instrumentation rather than from a ge
 
 ## Two other directions were built
 
-Both were complete four-page prototypes. **Neither survives in this repo** —
-`design-reference/` holds an earlier snapshot of the shipped Blued Steel
-direction, not these. They are described here from the record; there are no
-screenshots and no runnable copy. Treat the table below as history.
+Both are in [`directions/`](directions/) and both run — open either file in a
+browser, no build and no server. They read the same catalogue as the deployed
+site and are proof that the shop's identity is a design decision rather than a
+property of the platform.
+
+Note that `design-reference/` is **not** either of them: it is an earlier
+snapshot of the shipped Blued Steel direction, same graphite and dial palette.
 
 | | |
 |---|---|
-| **The Index** | Swiss systematic, c. 1970. Inter Tight only, no serif. One signal colour, `#D8341C`. Everything numbered; collections render as a table, not a card grid. A toggle exposes the real 12-column grid. |
-| **Night Vitrine** | The boutique after closing. Fully dark, warm blacks, light as the only accent. Every product sits in its own pool of light. Adds reviews, a journal, and a three-boutique section. |
+| [**The Index**](directions/index.html) | Swiss systematic, c. 1970. Inter Tight only, no serif. One signal colour, `#D8341C`. Everything numbered; collections render as a table, not a card grid. A toggle exposes the real 12-column grid. |
+| [**Night Vitrine**](directions/night-vitrine.html) | The boutique after closing. Fully dark, warm blacks, light as the only accent. Every product sits in its own pool of light. Adds reviews, a journal, and a three-boutique section. |
 
 ---
 

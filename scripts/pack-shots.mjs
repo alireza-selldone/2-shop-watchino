@@ -72,7 +72,7 @@ async function page({ width = 1440, height = 900, signedIn = false, bag = false 
       (r) => r.fulfill({ status: 200, contentType: "application/json", body: JSON.stringify(PROFILE) }),
     );
   }
-  if (bag) await ctx.addInitScript((v) => localStorage.setItem("watchino_bag_v1", v), BAG);
+  if (bag) await ctx.addInitScript((v) => localStorage.setItem("storefront_bag_v1", v), BAG);
   return { ctx, p: await ctx.newPage() };
 }
 

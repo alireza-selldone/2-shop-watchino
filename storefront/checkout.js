@@ -4,7 +4,7 @@
    order is placed. The physical basket path is documented inline so the real
    wiring is a substitution, not a rewrite. */
 
-import { loadCatalog, loadShop, money, bagLines, bagSubtotal, readBag } from "./watchino-data.js";
+import { loadCatalog, loadShop, money, bagLines, bagSubtotal, readBag } from "./shop-data.js";
 import { esc } from "./app.js";
 
 const STEPS = ["Contact", "Shipping", "Delivery", "Payment", "Review"];

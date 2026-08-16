@@ -98,7 +98,7 @@ const prime = async (p) => {
 
 const b = await chromium.launch();
 const ctx = await b.newContext({ viewport: { width: 1440, height: 900 } });
-await ctx.addInitScript((v) => localStorage.setItem("watchino_bag_v1", v),
+await ctx.addInitScript((v) => localStorage.setItem("storefront_bag_v1", v),
   JSON.stringify([{ id: 709403, qty: 1 }, { id: 325648, qty: 2 }]));
 const p = await ctx.newPage();
 
@@ -139,7 +139,7 @@ report("checkout summary", await p.evaluate(MEASURE));
 // every product page
 await p.goto(BASE + "/", { waitUntil: "domcontentloaded" });
 await p.waitForSelector("#catgrid .cat");
-const ids = await p.evaluate(async () => (await import("/watchino-data.js")).loadCatalog().then((c) => c.products.map((x) => x.id)));
+const ids = await p.evaluate(async () => (await import("/shop-data.js")).loadCatalog().then((c) => c.products.map((x) => x.id)));
 console.log(`\n  --- ${ids.length} product pages ---`);
 for (const id of ids) {
   await p.goto(BASE + page_("/product") + "?id=" + id, { waitUntil: "domcontentloaded" });

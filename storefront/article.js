@@ -1,6 +1,6 @@
 /* Single article. Accepts ?slug= or ?id=, where id is the shop-blog id the
    detail route calls blog_id — not the article id. */
-import { loadArticle, loadBlogCategories } from "./watchino-data.js";
+import { loadArticle, loadBlogCategories } from "./shop-data.js";
 import { esc } from "./app.js";
 
 const fmtDate = (iso) =>

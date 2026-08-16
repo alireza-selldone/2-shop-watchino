@@ -1,7 +1,7 @@
 /* Journal listing. Category filtering is server-side via ?category=<id>, which
    the list endpoint documents; the chips below reflect the real category list
    and its real per-category counts. */
-import { loadBlog } from "./watchino-data.js";
+import { loadBlog } from "./shop-data.js";
 import { esc } from "./app.js";
 
 const fmtDate = (iso) =>

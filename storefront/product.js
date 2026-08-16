@@ -6,8 +6,8 @@
 import {
   loadCatalog, loadProduct, money, byId, catOf, img,
   variantsOf, swatchStyle, swatchLabel, isComposite,
-  CAT_BLURB, addToBag,
-} from "./watchino-data.js";
+  addToBag,
+} from "./shop-data.js";
 import { cardHTML, esc, initAcc, openLightbox } from "./app.js";
 
 /* Spec keys worth surfacing, in reading order. Only those the record actually
@@ -176,7 +176,7 @@ async function initPDP(cat) {
         <div class="acc is-open">
           <button class="acc__hd" type="button" aria-expanded="true">Description <span class="acc__ico">–</span></button>
           <div class="acc__bd">
-            <p class="mt0">${esc(CAT_BLURB[p.cat] || "")}</p>
+            <p class="mt0">${esc(cat.cats.find((c) => c.slug === p.cat)?.blurb || "")}</p>
             <p class="cap mb0">Collection description. Selldone holds no per-reference description for this product.</p>
           </div>
         </div>
@@ -229,9 +229,9 @@ async function initPDP(cat) {
   /* Swatches — hex label plus a visible ordinal, so colour is never alone */
   /* Selecting a finish updates price, stock, SKU and the main photograph.
 
-     The gallery is matched on image URL, not on images[].variant_id: on 709761
-     those ids point at a variant set that no longer exists (2306331 claims
-     variant 1399688, while the live variants are 1399696-1700), so trusting
+     The gallery is matched on image URL, not on images[].variant_id: on at
+     least one reference in the demo shop those ids point at a variant set that
+     no longer exists — the image claims a variant that was deleted — so trusting
      them would silently show the wrong photograph. Noted in DECISIONS.md for
      cleanup on the Selldone side. */
   const galIndexFor = (v) => {

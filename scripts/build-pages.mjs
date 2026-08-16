@@ -18,13 +18,19 @@ const ROOT = resolve(join(dirname(fileURLToPath(import.meta.url)), ".."));
 const SRC = join(ROOT, "store-pages");
 const OUT = join(ROOT, "storefront");
 
+/* Shop-specific values come from shop.config.json, so there is one place to
+   change them and no second copy to drift. Anything the config leaves null
+   stays an UNFILLED token and renders visibly — an invented address looks
+   exactly like a real one, which is the problem with inventing it. */
+const CFG = JSON.parse(readFileSync(join(ROOT, "shop.config.json"), "utf8"));
+
 const TOKENS = {
-  SHOP_NAME: "Watchino",
-  SHOP_DOMAIN: "watchino.selldone.shop",
-  FOUNDED_YEAR: "1946",
-  COUNTRY: "Switzerland",
-  CURRENCY: "USD",
-  LAST_UPDATED: "13 August 2026",
+  SHOP_NAME: CFG.shop?.name || "",
+  SHOP_DOMAIN: CFG.shop?.domain || "",
+  FOUNDED_YEAR: CFG.brand?.foundedYear != null ? String(CFG.brand.foundedYear) : "",
+  COUNTRY: CFG.brand?.country || "",
+  CURRENCY: CFG.brand?.currency || "USD",
+  LAST_UPDATED: CFG.brand?.lastUpdated || "",
   RETURN_DAYS: "30",
   REFUND_DAYS: "14",
   DAMAGE_WINDOW: "7",
@@ -32,20 +38,23 @@ const TOKENS = {
   SUPPORT_RETENTION: "3",
   LOG_RETENTION: "90",
   RESPONSE_DAYS: "30",
-  OPENING_HOURS: "Mon–Fri, 09:00–17:00 CET",
+  OPENING_HOURS: CFG.brand?.openingHours || "",
 };
 
-/* Watchino has no real contact details. These stay visible as tokens: an
+// A token the config leaves empty is treated as unfilled, not as a blank.
+for (const [k, v] of Object.entries(TOKENS)) if (!v) delete TOKENS[k];
+
+/* This shop has no real contact details. These stay visible as tokens: an
    invented address looks like a fact and cannot be told apart from a real one
    by anybody reading the page. The shop record does carry values, but they are
    demo seed data — a Los Angeles address on a shop whose country is Switzerland. */
 const UNFILLED = new Set(["SHOP_EMAIL", "SHOP_PHONE", "SHOP_ADDRESS", "COMPANY_REGISTRATION"]);
 
 const PAGES = {
-  "about-us": ["The house", "Who Watchino is, how references are chosen, and what to expect after the sale."],
+  "about-us": ["The house", "Who we are, how references are chosen, and what to expect after the sale."],
   terms: ["Client care", "Terms and conditions covering orders, prices, delivery, returns and warranty."],
-  privacy: ["Client care", "What personal information Watchino collects, why, and how to have it removed."],
-  "contact-us": ["Client care", "How to reach Watchino, what to include, and how long a reply takes."],
+  privacy: ["Client care", "What personal information this shop collects, why, and how to have it removed."],
+  "contact-us": ["Client care", "How to reach us, what to include, and how long a reply takes."],
 };
 
 const BANNER = `<div class="demobanner">
@@ -149,7 +158,7 @@ for (const [slug, [eyebrow, desc]] of Object.entries(PAGES)) {
   if (!title) throw new Error(`${slug}.md has no H1`);
 
   const pageHead = head
-    .replace(/<title>.*?<\/title>/, `<title>${title} — Watchino</title>`)
+    .replace(/<title>.*?<\/title>/, `<title>${title} — ${TOKENS.SHOP_NAME || ""}</title>`)
     .replace(/(name="description"\s*\n\s*content=)"[^"]*"/, `$1"${desc}"`);
 
   const metaHtml = meta ? `\n              <p class="pghead__meta">${meta}</p>` : "";

@@ -1,9 +1,10 @@
-/* Watchino — homepage.
+/* Storefront homepage.
    Ported from design-reference/index.html + app.js fillHome().
    Every image resolves from live XAPI through the central Selldone helper;
    the prototype's hardcoded CDN URLs are gone (5 of its 6 were 404). */
 
-import { loadCatalog, money, byId, catOf, loadReviews, HERO_IMAGE, HERO_NATURAL, HERO_HOTSPOTS } from "./watchino-data.js";
+import { loadCatalog, money, byId, catOf, loadReviews, heroOf } from "./shop-data.js";
+import { isUnconfigured } from "./shop-config.js";
 import { cardHTML, esc } from "./app.js";
 
 /* ==========================================================================
@@ -116,42 +117,66 @@ function fillHome(cat) {
     if (el && p) { el.src = p.image; el.alt = alt || p.name; }
   };
 
-  /* ---- Hero ---------------------------------------------------------- */
+  /* ---- Hero ----------------------------------------------------------
+     Three modes, all driven by shop.config.json. `photo` is a lifestyle
+     photograph with measured hotspots and cannot be generated for another
+     shop; `slides` and `plate` are the portable ones. */
+  const hero = heroOf(cat.cfg);
   const heroImg = document.querySelector("[data-hero-img]");
+  const heroRef = hero.linkProductId ? byId(cat, hero.linkProductId) : null;
+  const fallback = heroRef || highestPriced(cat.products);
+
   if (heroImg) {
-    heroImg.src = HERO_IMAGE;
-    heroImg.alt = "A couple in evening dress, each wearing a rose gold watch with a purple dial";
+    if (hero.mode === "photo" && hero.image) {
+      heroImg.src = hero.image;
+      heroImg.alt = cat.cfg?.hero?.alt || "";
+    } else if (fallback) {
+      // Product plate. Contained, never cropped — the photography is shot on
+      // white and cropping it removes the object.
+      heroImg.src = fallback.image;
+      heroImg.alt = fallback.name;
+      heroImg.classList.add("hero__plate");
+    }
   }
   const heroLink = document.querySelector("[data-hero-link]");
-  const heroRef = byId(cat, 709403);
-  if (heroLink && heroRef) heroLink.href = `product.html?id=${heroRef.id}`;
-  fillHotspots(cat);
+  if (heroLink && fallback) heroLink.href = `product.html?id=${fallback.id}`;
+  fillHeroCopy(hero, fallback);
+  fillHotspots(cat, hero);
 
   // Counts come from the catalogue so they cannot drift when it grows.
   document.querySelectorAll("[data-all-refs]").forEach((a) => {
     a.textContent = `All ${cat.products.length} references →`;
   });
 
-  /* ---- Six collections — the heart of the page ---- */
+  /* ---- Collections — the heart of the page ----
+     Any number from 3 to 10. The column count follows from how many there
+     are, so the grid never leaves an orphan tile on its own row. Below three
+     `cat.cats` is empty and the whole section is dropped rather than showing
+     a lonely tile. */
   const grid = document.getElementById("catgrid");
+  const gridSection = grid?.closest("section");
+  if (gridSection) gridSection.hidden = cat.cats.length === 0;
+  if (grid) grid.dataset.n = String(cat.cats.length);
   if (grid) grid.innerHTML = cat.cats.map((c) => `
     <a class="cat" href="shop.html?cat=${c.slug}">
       <img src="${c.image}" alt="${esc(c.name)} — ${esc(c.heroName)}" loading="lazy" width="400" height="400">
       <b>${esc(c.name)}</b>
+      ${c.blurb ? `<p class="cap" style="margin-bottom:4px">${esc(c.blurb)}</p>` : ""}
       <p class="cap mb0">${c.count} references &middot; from ${money(c.from)}</p>
     </a>`).join("");
 
-  /* ---- Three price registers, computed live so they cannot drift ---- */
-  const collections = cat.products.filter((p) =>
-    ["mens-classic", "womens-collection", "heritage-leather", "sport-chronograph"].includes(p.cat));
-  const signature = cat.products.filter((p) => p.cat === "diamond-gold");
-  const haute = cat.products.filter((p) => p.cat === "haute-horlogerie");
-
+  /* ---- Three price registers ----
+     Terciles over the live catalogue, not named collections. The old version
+     listed this shop's own slugs, which meant every other shop got three empty
+     registers. Bands come from the data, so any catalogue produces three. */
+  const sorted = [...cat.products].sort((a, b) => a.price - b.price);
+  const third = Math.ceil(sorted.length / 3) || 1;
+  const bands = [sorted.slice(0, third), sorted.slice(third, third * 2), sorted.slice(third * 2)];
   const tiers = [
-    { sel: "[data-tier-1]", list: collections, hero: byId(cat, 709380) },
-    { sel: "[data-tier-2]", list: signature,   hero: byId(cat, 709373) },
-    { sel: "[data-tier-3]", list: haute,       hero: byId(cat, 709403) },
-  ];
+    { sel: "[data-tier-1]", list: bands[0] },
+    { sel: "[data-tier-2]", list: bands[1] },
+    { sel: "[data-tier-3]", list: bands[2] },
+  ].map((t) => ({ ...t, hero: highestPriced(t.list) }));
   tiers.forEach(({ sel, list, hero }) => {
     const root = document.querySelector(sel);
     if (!root || !list.length) return;
@@ -162,8 +187,10 @@ function fillHome(cat) {
     if (out) out.textContent = `${money(r.lo)} — ${money(r.hi)} · ${r.n} references`;
   });
 
-  /* ---- Single-reference spotlight ---- */
-  const spot = byId(cat, 709401);
+  /* ---- Single-reference spotlight ----
+     Resolved at runtime from the config's mode. No stored product id: the
+     highest-priced reference is whatever the shop currently sells. */
+  const spot = resolveSpotlight(cat);
   if (spot) {
     setImg("[data-spot-img]", spot, `${spot.name}, front view`);
     const nm = document.querySelector("[data-spot-name]"); if (nm) nm.textContent = spot.name;
@@ -202,7 +229,8 @@ function fillHome(cat) {
        <figcaption class="scene__cap"><b>The bench</b><span>Every movement opened before it ships</span></figcaption></figure>`;
 
   /* ---- Client care editorial ---- */
-  setImg("[data-service-img]", byId(cat, 709384), "Leather-strap wristwatch on the workbench");
+  // A mid-priced reference stands in for the workbench photograph.
+  setImg("[data-service-img]", cat.products[Math.floor(cat.products.length / 2)], "");
 }
 
 /* ---------- Hero markers ----------
@@ -214,14 +242,42 @@ function fillHome(cat) {
    at a time; click-outside and Escape close and return focus to the dot. The
    card measures its own height and flips below the dot when there is no room
    above, instead of leaving the frame. */
-function fillHotspots(cat) {
+const highestPriced = (list) =>
+  list && list.length ? list.reduce((a, b) => (b.price > a.price ? b : a)) : null;
+
+function resolveSpotlight(cat) {
+  const mode = cat.cfg?.spotlight?.mode || "highest-price";
+  if (mode === "product" && cat.cfg?.spotlight?.productId) {
+    return byId(cat, cat.cfg.spotlight.productId) || highestPriced(cat.products);
+  }
+  return highestPriced(cat.products);
+}
+
+/* Hero copy comes from the config where a slide supplies it, and is simply
+   omitted where it does not. A placeholder headline is worse than a shorter
+   hero: it reads as finished copy that nobody wrote. */
+function fillHeroCopy(hero, product) {
+  const slide = (hero.slides && hero.slides[0]) || null;
+  const set = (sel, text) => {
+    const el = document.querySelector(sel);
+    if (!el) return;
+    if (text) { el.textContent = text; el.hidden = false; }
+    else el.hidden = true;
+  };
+  if (!slide) return;                       // photo mode keeps the authored copy
+  set("[data-hero-kicker]", slide.kicker);
+  set("[data-hero-title]", slide.title);
+  set("[data-hero-lede]", slide.lede);
+}
+
+function fillHotspots(cat, hero) {
   const layer = document.querySelector("[data-hero-spots]");
   const mob = document.querySelector("[data-hero-mob]");
   const mobList = document.querySelector("[data-hero-mob-list]");
   const img = document.querySelector("[data-hero-img]");
   if (!layer || !img) return;
 
-  const found = HERO_HOTSPOTS
+  const found = (hero?.hotspots || [])
     .map((h) => ({ ...h, p: byId(cat, h.id) }))
     .filter((h) => h.p);            // a delisted reference simply drops out
 
@@ -254,8 +310,9 @@ function fillHotspots(cat) {
      re-derived: this is the maths both the code and its check got wrong. */
   const project = (xPct, yPct) => {
     const box = img.getBoundingClientRect();
-    const scale = Math.max(box.width / HERO_NATURAL.w, box.height / HERO_NATURAL.h);
-    const dw = HERO_NATURAL.w * scale, dh = HERO_NATURAL.h * scale;
+    const nat = hero.natural;
+    const scale = Math.max(box.width / nat.w, box.height / nat.h);
+    const dw = nat.w * scale, dh = nat.h * scale;
     const op = getComputedStyle(img).objectPosition.split(" ");
     const ox = parseFloat(op[0]) / 100, oy = parseFloat(op[1] ?? "50%") / 100;
     return {

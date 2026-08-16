@@ -65,7 +65,7 @@ for(const w of WIDTHS){
   // one context per width, so no scroll/localStorage state leaks between them
   const ctx=await b.newContext({viewport:{width:w,height:w===390?844:w===768?1024:900}});
   await cacheThirdParty(ctx);
-  await ctx.addInitScript(v=>localStorage.setItem("watchino_bag_v1",v),BAG);
+  await ctx.addInitScript(v=>localStorage.setItem("storefront_bag_v1",v),BAG);
   for(const [name,url,ready] of PAGES){
     const p=await ctx.newPage();
     const errs=[]; p.on("console",m=>{if(m.type()==="error")errs.push(m.text());});

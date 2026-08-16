@@ -1,75 +1,98 @@
 # Taking this repo to a new shop
 
-A followable sequence from a fresh clone to a deployed storefront. It assumes no
-prior knowledge of this project. Every step that has actually gone wrong here is
-called out where it happens, and the [troubleshooting](#troubleshooting) section
-at the end collects the ones that cost the most time.
+Three steps. No file is edited by hand, and nothing asks you which shop — the
+connector already knows.
 
 ---
 
-## 1. Clone and reset history
+## 1. Connect the Selldone MCP connector to your shop
+
+Connect it at <https://selldone.com/mcp/connections> and choose the shop you
+want the storefront to serve. That choice is the only place a shop is chosen;
+everything downstream reads it from the connection.
+
+## 2. Clone and run
 
 ```bash
 git clone https://github.com/<you>/<this-repo>.git my-shop
 cd my-shop
+npm install                  # wrangler and playwright, both dev-only
+npx playwright install chromium
+npm run dev:static           # http://localhost:8788/
 ```
+
+`npm install` pulls no runtime dependencies — the storefront ships as plain
+HTML, CSS and ES modules. Playwright is only for the verification suite.
+
+What you will see is the **demonstration catalogue** with an amber banner
+across the top saying so. That banner is the point: the repo ships configured
+for the demo shop, so a fresh clone runs and looks finished rather than blank,
+and it says out loud that the products are not yours.
 
 If this is a new shop rather than a contribution back, start its history clean:
 
 ```bash
-rm -rf .git
-git init
-git add -A
-git commit -m "Initial commit from the Watchino template"
+rm -rf .git && git init && git add -A && git commit -m "Initial commit from the template"
 ```
 
-> Resetting history is irreversible for the clone. Everything the previous shop
-> did is gone, including any orphaned modules. That is usually what you want —
-> but note it, because "go and find the old implementation in git history" stops
-> being possible the moment you do it.
+> Resetting history is irreversible for the clone. "Go and find the old
+> implementation in git history" stops being possible the moment you do it.
 
-## 2. Install
+## 3. Say one sentence to your agent
 
-```bash
-npm install                  # wrangler and playwright, both dev-only
-npx playwright install chromium
-```
+> Add my products, categories and blog.
 
-`npm install` pulls no runtime dependencies — the storefront ships as plain
-HTML, CSS and ES modules. Playwright is only for the verification suite, and its
-browser is a separate one-off download because nothing else in the repo needs it.
+That is the whole interface. The agent reads the connected shop from
+`selldone_current_connection`, runs `npm run setup`, writes the category blurbs
+and hero copy from what your products actually are, and adds a blog if the shop
+has none.
 
-## 3. The meta tags
+What `npm run setup` does, and what it deliberately does not:
 
-Public runtime config lives in `<meta>` tags, read by `shared/runtime-config.js`.
-They appear in **three** files and **every shared value must match across all
-three**, or the storefront and the dashboard will disagree about which shop they
-are talking to:
+| It does | It does not |
+|---|---|
+| Read your live categories and products from XAPI | Ask which shop — the connector already chose |
+| Derive a slug per category **from its live title** | Carry any other shop's category ids |
+| Pick a hero image per collection, and three hero slides | Write the copy for them |
+| Write `shop.config.json` and set `isTemplate: false` | Invent a founding year, cities or a tagline |
+| Propagate shop identity into every meta tag | Invent contact details |
 
-- `storefront/index.html`
-- `dashboard/index.html`
-- `callback/index.html`
+Blurbs and hero copy are left for the agent because they have to be written
+from what the products actually are. A script that generated them would be
+inventing data, and this project has removed fabricated copy twice.
 
-| Meta name | What it is | Example |
-|---|---|---|
-| `shop-name` | Display name used in page titles | `Watchino` |
-| `pajulina-shop-id` | Numeric Selldone shop id. Some XAPI routes take this rather than the handle | `8460` |
-| `pajulina-shop-name` | Shop display name | `Watchino` |
-| `pajulina-storefront-shop-handle` | The `@handle` in XAPI paths — `/shops/@Watchino/...` | `Watchino` |
-| `pajulina-shop-domain` | The shop's Selldone-hosted domain | `watchino.myselldone.com` |
-| `pajulina-client-id` | OAuth client id from step 4. **No secret ever** | `019ff544-…` |
-| `pajulina-app-name` | Name shown on the OAuth consent screen | `Selldone Shop A1` |
-| `pajulina-callback-path` | Path the OAuth redirect returns to | `/callback/` |
-| `pajulina-dashboard-path` | Where the browser-side admin is served | `/dashboard/` |
-| `pajulina-selldone-base` | OAuth host | `https://selldone.com` |
-| `pajulina-xapi-base` | Storefront data host | `https://xapi.selldone.com` |
-| `pajulina-api-base` | Backoffice host — **dashboard only**, never called from the storefront | `https://api.selldone.com` |
-| `pajulina-auth-prompt` | OAuth `prompt` parameter | `consent` |
-| `custom-home` | Which view the root serves | `shop` |
+**Re-running `npm run setup` is safe and is the intended workflow**: it carries
+forward anything already written for a category that still exists, and rewrites
+the rest.
 
-The numeric id and the handle are **not interchangeable**. Catalogue routes take
-`@handle`; audience capture takes the numeric id. Getting them the wrong way
-round produces a 404 that reads like a missing endpoint.
+### Everything shop-specific lives in one file
+
+`shop.config.json` at the repo root. Shop id, handle, name, OAuth client,
+founding year, cities, tagline, category slugs and blurbs, hero mode and
+slides, spotlight rule, contact details. The build copies it beside the pages,
+so replacing that one file repoints a built site without rebuilding.
+
+`isTemplate` is the safety flag. While it is `true` — **or while the shop id is
+missing** — the amber banner shows. The condition is deliberately not "is this
+the demo shop's id": an empty config is just as dangerous as one still naming
+the demo shop, and an operator who deleted the values believes they unset
+something.
+
+### Categories: any number from three to ten
+
+The grid adapts. Below three the section is dropped rather than showing a
+lonely tile; above ten the ten largest are kept and the run report says which
+were left out.
+
+| Categories | Desktop grid |
+|---|---|
+| 3 | 3 across |
+| 4 | 4 across |
+| 5 or 6 | 3 across, two rows |
+| 7 or 8 | 4 across, two rows |
+| 9 or 10 | 5 across, two rows |
+
+---
 
 ## 4. Create the OAuth client
 
@@ -85,8 +108,9 @@ In Selldone, create an OAuth client with:
   `order-history`, `my-gift-cards`
 - **Redirect URIs:** one for **every domain the storefront will ever serve from**
 
-Put the client id into `pajulina-client-id` in all three files. Leave any secret
-field empty.
+Put the client id into **`shop.config.json`** under `oauth.clientId`, then run
+`npm run setup` again — it writes the meta tags in all three files for you.
+Leave any secret field empty.
 
 ### Redirect URIs — the step whose absence costs an afternoon
 
@@ -205,6 +229,8 @@ npm run check           # in a second terminal
 | `check:pages` | Every footer link resolves to content that is **not** the homepage, with a deliberately unrouted path kept in the run as a negative control |
 | `check:controls` | Every visible button and link does something, detected by instrumenting `addEventListener` — not inferred from class names |
 | `check:hero` | The hero crop keeps both watch hotspots in frame at 1440/1280/1024, with a knowingly-wrong crop as the negative control |
+| `check:port` | The storefront works for a shop that is not this one: 3 to 10 categories, slugs derived from live titles, the banner firing on template-or-missing |
+| `check:leak` | No category id, product id or brand copy string survives in `storefront/`, and every shop-id meta agrees with the config |
 
 Each accepts a base URL, so the same checks run against a deployment:
 

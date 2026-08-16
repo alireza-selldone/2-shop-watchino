@@ -95,6 +95,13 @@ function serveSourceFile(request, response, url) {
     serveWithFallback(response, SOURCE_ROOTS.callback, pathname.slice("/callback/".length) || "index.html", "index.html");
     return;
   }
+  /* shop.config.json lives at the repo root, not in storefront/, because it is
+     the one file an operator replaces. The build copies it beside the pages;
+     the dev server serves it from the root so both agree. */
+  if (pathname === "/shop.config.json") {
+    serveFileOr404(response, ROOT, "shop.config.json");
+    return;
+  }
   serveWithFallback(response, SOURCE_ROOTS.storefront, pathname.slice(1) || "index.html", "index.html");
 }
 

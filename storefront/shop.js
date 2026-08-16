@@ -2,7 +2,7 @@
    Ported from design-reference/shop.html + initShop(), extended with the
    brand filter. All data live from XAPI. */
 
-import { loadCatalog, money, catOf } from "./watchino-data.js";
+import { loadCatalog, money, catOf } from "./shop-data.js";
 import { cardHTML, esc } from "./app.js";
 
 const lg = Math.log10;

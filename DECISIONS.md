@@ -52,10 +52,81 @@ push. Disconnecting it is a dashboard action.
 
 ---
 
+## Making the template portable — built
+
+The freeze lifted for this one piece. What shipped, and the judgement calls.
+
+**`CAT_SLUG` is gone.** Slugs are derived from the live category title.
+`categoryIndex()` in `shop-data.js` builds the map at load time; nothing in
+`storefront/` knows a category id any more. Two categories that slugify the
+same get the id appended so the pair stays addressable rather than collapsing.
+
+**Setup is idempotent, and that took two goes to get right.** The first run
+against this shop rewrote every slug — `mens-classic` became `men-s-classic`
+because the apostrophe was becoming a separator, and `heritage-leather` became
+`heritage-and-leather` — and re-picked the six hand-chosen category heroes by
+heuristic. Both would have silently broken every `?cat=` link on a shop that
+had not changed. Setup now **keeps** an existing slug, an existing curated hero
+and the existing running order whenever the shop id is unchanged, and only
+derives what is missing. Verified by running it against this shop twice and
+diffing: byte-identical.
+
+**The apostrophe fix matters more than it looks.** `slugify` strips `'`, `’`
+and `ʼ` before the non-alphanumeric pass, so "Men's Classic" is `mens-classic`.
+Any shop with a possessive in a category name would otherwise get a slug with a
+stray hyphen in the middle of a word.
+
+**The banner clears the index rail.** It is inserted as the first child of
+`body`, outside `.page`, so without `margin-left: var(--rail)` the fixed rail
+sat over the first 56px and ate the start of both lines. Caught by looking at a
+screenshot, not by an assertion — the DOM was correct and the text was
+unreadable.
+
+**Three hero modes, not one.** `photo` keeps this shop's lifestyle photograph
+and its measured hotspots; `slides` is what setup writes for any other shop;
+`plate` is the fallback when no product has an image that reads at hero size.
+Hotspots are returned **only** in photo mode with an image set, because a
+missing image with markers floating over nothing is worse than no markers —
+which was the phase 3 decision, now implemented rather than recorded.
+
+**Price registers are terciles now, not named collections.** They used to
+filter on this shop's own slugs, so every other shop would have got three empty
+registers. Bands come from the price distribution, so any catalogue produces
+three.
+
+**Setup does not write copy.** Category blurbs and hero kickers/titles/ledes
+are reported as outstanding and left for the agent. A script that generated
+them would be inventing data, and this project has removed fabricated copy
+twice. An empty blurb is allowed and renders as name-and-count alone; a vague
+one is not.
+
+**`isTemplate` ships `true`, including on the deployed demo.** The banner reads
+"These are sample products from the Watchino demonstration shop, not yours."
+That is true of the live site as well as of a fresh clone, and a visitor
+evaluating the platform should be told which they are looking at. It fires on
+`isTemplate === true` **or a missing shop id** — never on a literal id, because
+the storefront no longer has a fallback shop and an empty config is exactly as
+dangerous as one still naming the demo.
+
+### What was NOT tested against a real second shop
+
+**No second Selldone shop was available.** `scripts/portcheck.mjs` intercepts
+the catalogue endpoints and serves synthetic shops with 2, 3, 4, 5, 6, 7, 8, 9,
+10 and 12 categories, with ids in a completely different range and titles
+containing an ampersand and an accent. The code under test is the real
+storefront — real slug derivation, real grid, real config handling — and only
+the shop behind XAPI is synthetic. That is a genuine test of the portability
+code and it is not the same thing as running against someone else's shop.
+Stated here rather than implied away.
+
+The `npm run setup` half was exercised for real, but only against this shop.
+
+---
+
 ## Handover config — agreed, scoped, not built
 
-Deferred to its own piece of work after the pack. **No code was written for
-this.** Recorded here so phase 1 starts from the right place.
+> **Superseded — this was built. See the section above.** Kept because the
+> reasoning that shaped it is still the reasoning behind the implementation.
 
 **The problem.** An untouched clone of this repo serves shop 8460's catalogue on
 someone else's domain. The shop id and handle are meta tags, and

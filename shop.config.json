@@ -1,0 +1,104 @@
+{
+  "$comment": "Every shop-specific value in one file. Written by `npm run setup`; nothing here should be hand-edited on a real shop. Ships with the demonstration shop's values and isTemplate:true, so a fresh clone runs and looks finished while saying out loud that the products are not yours.",
+  "shop": {
+    "id": 8460,
+    "handle": "Watchino",
+    "name": "Watchino",
+    "domain": "watchino.myselldone.com"
+  },
+  "isTemplate": true,
+  "oauth": {
+    "clientId": "019ff544-c6a2-73fa-b47c-75e4254fda53",
+    "appName": "Selldone Shop A1"
+  },
+  "brand": {
+    "foundedYear": 1946,
+    "cities": "Zürich and London",
+    "tagline": "Fine watches, sold by people who repair them.",
+    "announcement": "Insured worldwide delivery · Every reference authenticated in-house"
+  },
+  "categories": [
+    {
+      "id": 37955,
+      "slug": "mens-classic",
+      "blurb": "Round cases, printed dials, nothing shouting."
+    },
+    {
+      "id": 37956,
+      "slug": "womens-collection",
+      "blurb": "Smaller cases, set indices, quartz and automatic."
+    },
+    {
+      "id": 37957,
+      "slug": "heritage-leather",
+      "blurb": "Alligator and calf, stitched by hand."
+    },
+    {
+      "id": 107902,
+      "slug": "sport-chronograph",
+      "blurb": "Tachymeter bezels and screw-down crowns."
+    },
+    {
+      "id": 37959,
+      "slug": "diamond-gold",
+      "blurb": "Set stones and solid cases, finished by hand."
+    },
+    {
+      "id": 37958,
+      "slug": "haute-horlogerie",
+      "blurb": "Months of finishing per piece."
+    }
+  ],
+  "categoryHeroes": {
+    "mens-classic": 325648,
+    "womens-collection": 709386,
+    "heritage-leather": 709381,
+    "sport-chronograph": 709380,
+    "diamond-gold": 709373,
+    "haute-horlogerie": 709403
+  },
+  "hero": {
+    "$comment": "mode 'photo' uses a lifestyle photograph with hotspot coordinates measured by eye against that specific file — it cannot be generated for another shop. mode 'slides' is the portable default `npm run setup` writes. mode 'plate' drops the slider when no product has an image that reads at hero size.",
+    "mode": "photo",
+    "image": "assets/hero-couple.png",
+    "natural": {
+      "w": 1672,
+      "h": 941
+    },
+    "linkProductId": 709403,
+    "hotspots": [
+      {
+        "id": 709761,
+        "dial": {
+          "x": 53.9,
+          "y": 70.6
+        },
+        "dot": {
+          "x": 53.9,
+          "y": 74
+        }
+      },
+      {
+        "id": 709762,
+        "dial": {
+          "x": 77.4,
+          "y": 63.5
+        },
+        "dot": {
+          "x": 77.4,
+          "y": 67
+        }
+      }
+    ],
+    "slides": [],
+    "alt": "A couple in evening dress, each wearing a steel watch"
+  },
+  "spotlight": {
+    "mode": "highest-price"
+  },
+  "contact": {
+    "email": null,
+    "phone": null,
+    "address": null
+  }
+}

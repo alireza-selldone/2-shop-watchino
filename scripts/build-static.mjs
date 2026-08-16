@@ -18,6 +18,11 @@ await copyDirectory("storefront", ".");
 await copyDirectory("dashboard", "dashboard");
 await copyDirectory("shared", "shared");
 await copyDirectory("callback", "callback");
+
+/* shop.config.json ships beside the pages, not inside the bundle. The same
+   built output therefore serves any shop: replacing this one file replaces
+   the catalogue, the collections and the brand copy without a rebuild. */
+await cp(join(ROOT, "shop.config.json"), join(DIST, "shop.config.json"));
 await writeCloudflareFiles();
 
 console.log(`Static build written to ${DIST}`);

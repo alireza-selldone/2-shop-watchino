@@ -7,8 +7,9 @@ import {
   swatchStyle, swatchLabel, isComposite,
   readBag, addToBag, removeFromBag, bagCount, bagLines, bagSubtotal,
   subscribe, loadOrders,
-} from "./watchino-data.js";
+} from "./shop-data.js";
 import { storefrontAuth } from "../shared/auth-client.js";
+import { shopConfig, isUnconfigured } from "./shop-config.js";
 
 let CAT = null;
 
@@ -27,6 +28,62 @@ export function cardHTML(p) {
 export const esc = (s) =>
   String(s ?? "").replace(/[&<>"']/g, (c) =>
     ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+
+/* ---------- Template banner ----------
+   Fires on "still the template OR no shop id at all" — never on a specific
+   shop id. The storefront has no fallback shop any more, so an empty config
+   produces an empty catalogue rather than someone else's; either way the
+   operator needs telling, loudly, before they show it to a customer.
+
+   Amber, the same #E0A800 on #FFF8E1 as the demo-content banner and the
+   sign-in callout: one amber across the site means one category of message —
+   this is scaffolding, not the shop speaking. Above everything, including the
+   platform credit, because it is the most important thing on the page until
+   it goes away. */
+async function initTemplateBanner() {
+  const cfg = await shopConfig();
+  if (!isUnconfigured(cfg)) return;
+  const name = cfg.shop?.name || "the demonstration";
+  const el = document.createElement("div");
+  el.className = "tplbanner";
+  el.setAttribute("role", "status");
+  el.innerHTML = `<p class="tplbanner__in">
+    <b>These are sample products from the ${esc(name)} demonstration shop, not yours.</b>
+    <span>Ask your agent to add your products to make this site your own.</span>
+  </p>`;
+  document.body.insertBefore(el, document.body.firstChild);
+}
+
+/* ---------- Brand copy ----------
+   Founding year, cities, tagline and the announcement line all come from the
+   config. Where the shop has no equivalent the element is REMOVED, not filled
+   with a placeholder: an empty rail label is invisible, whereas "EST. ----"
+   is a lie with a hyphen in it. */
+async function fillBrandCopy() {
+  const cfg = await shopConfig();
+  const b = cfg.brand || {};
+
+  const set = (sel, text) => {
+    document.querySelectorAll(sel).forEach((el) => {
+      if (text) el.textContent = text;
+      else el.remove();
+    });
+  };
+
+  set("[data-brand-est]", b.foundedYear ? `EST. ${b.foundedYear}` : "");
+  set("[data-announce-long]", b.announcement || "");
+  set("[data-announce-short]", b.announcementShort || b.announcement || "");
+
+  // Tagline and cities are two sentences; either can be absent on its own.
+  const line = [b.tagline, b.cities ? `${b.cities}.` : ""].filter(Boolean).join(" ");
+  set("[data-brand-tagline]", line);
+
+  // Checkout's hand-delivery line names the cities where it is offered. With
+  // no cities configured it stays "By appointment" rather than naming nowhere.
+  document.querySelectorAll("[data-brand-cities-line]").forEach((el) => {
+    el.textContent = b.cities ? `By appointment, ${b.cities} only` : "By appointment";
+  });
+}
 
 /* ---------- Header, rail, drawers ---------- */
 function initHeader() {
@@ -489,6 +546,11 @@ function initDeepLink() {
 
 /* ---------- Boot ---------- */
 document.addEventListener("DOMContentLoaded", async () => {
+  // First, so the warning is up before the catalogue resolves. Awaited: the
+  // banner shifts the page, and shifting it after the reader has started is
+  // worse than a few milliseconds of delay.
+  await initTemplateBanner();
+  fillBrandCopy();
   initHeader();
   initRail();
   initReveal();

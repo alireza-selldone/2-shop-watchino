@@ -31,7 +31,7 @@ const PAGES = [["home","/","#catgrid .cat"],["shop","/shop.html","#pgrid .pcard"
 
 const b = await chromium.launch();
 const ctx = await b.newContext({ viewport:{width:1440,height:900} });
-await ctx.addInitScript(v=>localStorage.setItem("watchino_bag_v1",v), JSON.stringify([{id:709403,qty:1}]));
+await ctx.addInitScript(v=>localStorage.setItem("storefront_bag_v1",v), JSON.stringify([{id:709403,qty:1}]));
 
 /* Runs before page scripts, so every listener the app registers is recorded. */
 await ctx.addInitScript(() => {

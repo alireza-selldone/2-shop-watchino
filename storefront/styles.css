@@ -1302,3 +1302,42 @@ html.js-reveal .reveal.is-in{opacity:1;transform:none;}
   display:inline-block;padding:11px 12px;margin:-11px -12px;
 }
 .sdbar a:hover{color:var(--blued);}
+
+/* Template banner. Above everything, including the platform credit: until the
+   config names a real shop, "these are not your products" outranks every other
+   message on the page. Same amber as the demo banner and the sign-in callout —
+   one amber across the site, meaning one category of message. */
+.tplbanner{
+  background:#FFF8E1;border-bottom:2px solid #E0A800;
+  /* Clears the fixed index rail, exactly as .page does. Without this the rail
+     sits over the first ~56px and eats the start of every line. */
+  margin-left:var(--rail);
+}
+@media (max-width:950px){ .tplbanner{margin-left:0;} }
+.tplbanner__in{
+  margin:0 auto;max-width:var(--maxw);padding:11px var(--pad);
+  font-size:13.5px;line-height:1.5;color:#4A3600;
+}
+.tplbanner__in b{display:block;font-weight:600;color:#3D2C00;}
+.tplbanner__in span{display:block;}
+
+/* Collections grid adapts to how many categories the shop actually has, so a
+   set of 3, 5, 7 or 10 never leaves one tile orphaned on its own row.
+   Below 3 the section is hidden entirely by home.js. */
+#catgrid[data-n="3"]{grid-template-columns:repeat(3,1fr);}
+#catgrid[data-n="4"]{grid-template-columns:repeat(4,1fr);}
+#catgrid[data-n="5"],
+#catgrid[data-n="6"]{grid-template-columns:repeat(3,1fr);}
+#catgrid[data-n="7"],
+#catgrid[data-n="8"]{grid-template-columns:repeat(4,1fr);}
+#catgrid[data-n="9"],
+#catgrid[data-n="10"]{grid-template-columns:repeat(5,1fr);}
+@media (max-width:1100px){
+  #catgrid[data-n="7"],#catgrid[data-n="8"],
+  #catgrid[data-n="9"],#catgrid[data-n="10"]{grid-template-columns:repeat(3,1fr);}
+}
+@media (max-width:820px){ #catgrid[data-n]{grid-template-columns:repeat(2,1fr);} }
+@media (max-width:520px){ #catgrid[data-n]{grid-template-columns:1fr;} }
+
+/* Hero in plate or slides mode: a product photograph, contained never cropped. */
+.hero__plate{object-fit:contain !important;padding:4%;}
